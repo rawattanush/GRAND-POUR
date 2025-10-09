@@ -1,0 +1,2557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Grand Pour: A Coffee Tycoon Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&display=swap');
+
+        :root {
+            --bg-color: #3e2723;
+            --surface-color: #f4f1ea;
+            --primary-color: #8b4513;
+            --primary-dark: #5a2d0c;
+            --secondary-color: #c89f7f;
+            --accent-color: #d4af37;
+            --text-dark: #3d3532;
+            --text-light: #f4f1ea;
+            --success-color: #4CAF50;
+            --error-color: #f44336;
+            --font-main: 'Roboto', sans-serif;
+            --font-display: 'Playfair Display', serif;
+        }
+
+        /* --- General Reset & Setup --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='%233a2c26' fill-opacity='0.4'%3E%3Crect x='0' y='0' width='100' height='1'/%3E%3Crect x='0' y='0' width='1' height='100'/%3E%3C/g%3E%3C/svg%3E");
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* --- Game Container --- */
+        .game-container {
+            width: 100%;
+            max-width: 1600px; /* Increased max-width */
+            height: 95vh;
+            max-height: 950px;
+            background: var(--surface-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 2px var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            background: linear-gradient(to right, #3d3532, var(--bg-color));
+            color: var(--text-light);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--accent-color);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-controls { display: flex; align-items: center; gap: 1rem; }
+        .stats-bar { display: flex; gap: 1.5rem; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: 500; color: var(--accent-color); }
+        .stat-label { font-size: 0.8rem; opacity: 0.8; }
+        .header-btn { background: none; border: 2px solid var(--secondary-color); color: var(--text-light); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; transition: all 0.2s; font-size: 1rem;}
+        .header-btn:hover { background: var(--secondary-color); color: var(--primary-dark); }
+
+        /* --- Main Content Area --- */
+        .main-game {
+            flex-grow: 1;
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            overflow: hidden;
+        }
+
+        /* --- Shop View (Top Part) --- */
+        .shop-view {
+            background: linear-gradient(to top, #d3c4b2, #e8d5c4);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 320px;
+        }
+        
+        .shop-flex-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 100%;
+            position: relative;
+            z-index: 3;
+        }
+
+        #prepArea {
+            flex-grow: 1;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .prep-station-container {
+             position: absolute;
+             bottom: 120px;
+             left: 50%;
+             transform: translateX(-50%);
+             width: 750px;
+             height: 250px;
+             perspective: 1000px;
+        }
+
+        .prep-station {
+            width: 100%;
+            height: 80px;
+            background: #a0522d;
+            border: 5px solid #6b3a1a;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 0;
+            transform: rotateX(40deg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        #craftingGrid {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: flex-end;
+            gap: 1.5rem;
+        }
+        .crafting-input-area {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+        .slot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .slot-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--primary-dark);
+        }
+
+        .crafting-slot {
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.1);
+            border: 3px dashed rgba(0,0,0,0.2);
+            border-radius: 10px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .crafting-slot.droppable {
+            border-color: var(--accent-color);
+            background: rgba(212, 175, 55, 0.2);
+        }
+        #equipmentCraftSlot {
+            border-style: solid;
+            border-color: #6b3a1a;
+        }
+        #resultSlot {
+            cursor: pointer;
+            border-color: var(--success-color);
+        }
+        
+        .crafting-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #brewButton {
+            width: 90px;
+            height: 45px;
+            margin: 0;
+            position: relative;
+        }
+        .brewing-arrow {
+            font-size: 2rem;
+            color: var(--primary-dark);
+        }
+        
+        #brewingTimerDisplay {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-light);
+            background: rgba(0,0,0,0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            min-width: 60px;
+            text-align: center;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+
+        /* Preparation Animations Area */
+        #animationArea {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2rem;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        .weighing-scale { opacity: 0; transition: opacity 0.3s; }
+        .weighing-scale.visible { opacity: 1; }
+        .scale-base { width: 80px; height: 10px; background: #ccc; border-radius: 2px; }
+        .scale-plate { width: 70px; height: 5px; background: #eee; border-radius: 2px; position: absolute; bottom: 10px; left: 5px; }
+        .scale-display { position: absolute; bottom: 15px; left: 5px; background: #333; color: #7FFF00; font-family: monospace; font-size: 12px; padding: 2px 4px; border-radius: 2px; }
+        
+        .prep-bowl {
+            width: 60px; height: 30px; background: #fff; border: 2px solid #ccc; border-radius: 50% 50% 10px 10px / 100% 100% 20px 20px;
+            opacity: 0; transition: opacity 0.3s; position: relative;
+        }
+        .prep-bowl.visible { opacity: 1; }
+        .coffee-grounds { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0%; height: 0%; background: #654321; border-radius: 50%; transition: width 0.5s, height 0.5s; }
+
+        .prep-cup {
+            width: 70px; height: 80px; background: #f8f8f8; border: 3px solid #ddd; border-radius: 5px 5px 20px 20px;
+            opacity: 0; transition: opacity 0.3s; overflow: hidden; position: relative;
+        }
+        .prep-cup.visible { opacity: 1; }
+        .liquid { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; transition: height 1s, background-color: 0.5s; }
+        .liquid.water { background: #aaddff; }
+        .liquid.milk { background: #fffdd0; }
+        .liquid.espresso { background: #3b2f2f; }
+        .liquid.syrup { background: #c27a38; }
+
+        /* Steam animation for hot drinks */
+        .steam-container {
+            position: absolute;
+            top: -40px; /* Position above the cup */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 40px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .steam-container.visible {
+            opacity: 0.7;
+        }
+        .steam-particle {
+            position: absolute;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: steamRise 2.1s infinite ease-out;
+        }
+        @keyframes steamRise {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-40px) scale(0.3); opacity: 0; }
+        }
+
+        #craftingGrid .result-glow {
+            animation: resultGlow 1.5s ease-out;
+        }
+        @keyframes resultGlow {
+            0%, 100% { box-shadow: inset 0 0 5px rgba(212, 175, 55, 0.7); border-color: var(--success-color); }
+            50% { box-shadow: inset 0 0 15px rgba(212, 175, 55, 1), 0 0 15px rgba(212, 175, 55, 1); border-color: var(--accent-color); }
+        }
+
+        #brewButton.final-brew-glow {
+            animation: finalGlow 0.8s infinite alternate ease-in-out;
+        }
+        @keyframes finalGlow {
+            from { box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--accent-color); transform: scale(1); }
+            to { box-shadow: 0 0 10px #fff, 0 0 20px var(--accent-color), 0 0 30px var(--accent-color); transform: scale(1.05); }
+        }
+
+        #customerArea {
+            position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
+            width: 100%; display: flex; justify-content: center; align-items: flex-end;
+            gap: 2rem; z-index: 2; height: 300px; padding: 0 2rem; pointer-events: none;
+        }
+
+        .customer {
+            width: 120px; position: relative;
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        }
+        .customer.customer-enter { transform: translateY(100%); opacity: 0; }
+        .customer.customer-leave { transform: translateY(150%); opacity: 0; }
+        .customer-svg { width: 100%; height: auto; display: block; }
+        .order-bubble {
+            position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%);
+            background: white; padding: 0.8rem 1.2rem; border-radius: 20px 20px 20px 5px;
+            width: max-content; max-width: 200px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem; z-index: 10; border: 2px solid var(--primary-color);
+            opacity: 0; transform-origin: bottom center;
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .order-bubble.angry {
+            border-color: var(--error-color);
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(-50%); }
+            25% { transform: translateX(-55%); }
+            75% { transform: translateX(-45%); }
+        }
+        .customer.show-bubble .order-bubble { opacity: 1; transform: translateX(-50%) scale(1); }
+
+        #baristaArea {
+            position: relative; width: 150px;
+            align-self: flex-end; margin-left: 2rem;
+        }
+        .barista-svg { width: 100%; height: auto; animation: idleBob 3s ease-in-out infinite; }
+
+        @keyframes idleBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        #intermediateProductArea {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0,0,0,0.15);
+            padding: 1rem;
+            border-radius: 15px;
+            border: 2px solid var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-width: 170px;
+        }
+        .tray-title {
+            font-family: var(--font-display);
+            color: var(--text-dark);
+            text-align: center;
+            font-size: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--secondary-color);
+        }
+        #trayItems {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        .tray-item {
+            width: 60px; height: 60px;
+            background: var(--surface-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
+            padding: 5px;
+            cursor: grab;
+            position: relative;
+            transition: transform 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tray-item:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+        }
+        .tray-item .item-count {
+            position: absolute; bottom: -5px; right: -5px; background: var(--primary-color); color: var(--text-light);
+            border-radius: 50%; font-size: 0.8rem; width: 20px; height: 20px;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .tray-item:active { cursor: grabbing; }
+
+        #shelvesStation {
+            flex-basis: 280px; /* Further reduced */
+            flex-shrink: 0;
+            max-width: 280px; /* Further reduced */
+            overflow-y: hidden; 
+            background: rgba(0,0,0,0.1); border-left: 2px solid var(--secondary-color);
+            padding: 0.4rem; /* Further reduced */
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem; /* Further reduced */
+            margin-right: 0.4rem; /* Further reduced */
+            border-radius: 10px 10px 0 0;
+            align-self: stretch;
+        }
+        .station-shelf {
+            background: var(--surface-color); border-radius: 8px; 
+            padding: 0.4rem; /* Further reduced */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .shelf-title {
+            font-family: var(--font-display);
+            color: var(--primary-dark);
+            margin-bottom: 0.4rem; /* Further reduced */
+            border-bottom: 1px solid var(--secondary-color); 
+            padding-bottom: 0.25rem;
+            font-size: 0.9rem; /* Further reduced */
+        }
+        .shelf-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); /* Further reduced */
+            gap: 0.4rem; /* Further reduced */
+        }
+        
+        .shelf-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            height: auto;
+            cursor: pointer; transition: transform 0.2s, filter 0.2s, opacity 0.2s;
+            position: relative; background: #fff; padding: 5px; border-radius: 8px; border: 2px solid transparent;
+        }
+        .shelf-item:hover { transform: scale(1.1); }
+        .shelf-item.equipment.locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+        .shelf-item.equipment.locked::after { content: "🔒"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; color: var(--text-dark); }
+        .shelf-item.needed { border-color: var(--accent-color); box-shadow: 0 0 10px var(--accent-color); }
+        
+        .shelf-item-svg { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain;
+        }
+        .crafting-slot .shelf-item-svg {
+            padding: 10px;
+            pointer-events: none;
+        }
+
+        .shelf-item .item-count {
+            position: absolute; bottom: -5px; right: -5px; background: var(--primary-dark);
+            color: var(--text-light); border-radius: 10px; font-size: 0.8rem;
+            min-width: 20px; height: 20px; padding: 0 4px;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+
+        .shelf-item .shelf-item-tooltip {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 15;
+            bottom: 110%; 
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            pointer-events: none;
+            text-transform: capitalize;
+        }
+
+        .shelf-item:hover .shelf-item-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .shelf-item .shelf-item-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-dark) transparent transparent transparent;
+        }
+
+
+        .floating-money { position: absolute; z-index: 10; color: var(--success-color); font-weight: bold; font-size: 1.5rem; text-shadow: 1px 1px 0 white; animation: floatUp 1.5s ease-out forwards; }
+        @keyframes floatUp { to { transform: translateY(-80px); opacity: 0; } }
+        
+        .counter-area {
+            width: 100%; height: 120px; background: linear-gradient(to top, #6b3a1a, #8b4513);
+            border-top: 10px solid #5a2d0c; box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.3) inset;
+            position: absolute; bottom: 0; left: 0; z-index: 1;
+        }
+
+        /* --- Controls (Bottom Part) --- */
+        .controls-view {
+            background: #e0d6c9; border-top: 4px solid var(--secondary-color); padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* MODIFIED for better responsiveness */
+            gap: 1.5rem;
+            align-items: stretch; flex-shrink: 0; overflow: hidden;
+        }
+        .panel { background: var(--surface-color); border-radius: 12px; padding: 1rem; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; max-height: 300px; }
+        .panel-title { font-family: var(--font-display); color: var(--primary-dark); margin-bottom: 1rem; border-bottom: 2px solid var(--secondary-color); padding-bottom: 0.5rem; font-size: 1.25rem; flex-shrink: 0; }
+        .panel-content { flex-grow: 1; overflow-y: auto; }
+        .menu-items { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .menu-item { background: #fff; padding: 0.75rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
+        .menu-item:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .menu-item.active { border-color: var(--primary-color); background: #fffaf0; }
+        .item-name { font-weight: 500; font-size: 1rem; }
+        .item-price-container { font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem; }
+        .price-input { width: 60px; border: 1px solid #ccc; border-radius: 4px; margin-left: 5px; text-align: center; font-weight: bold; color: var(--primary-dark); }
+        #orderDisplay { text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        #orderStatus { font-size: 1.1rem; font-weight: 500; margin-bottom: 1rem; min-height: 40px;}
+        #patienceMeterContainer { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
+        #patienceMeter { height: 100%; background: linear-gradient(to right, var(--error-color), orange, var(--success-color)); background-size: 200%; transition: background-position 0.3s, width 0.3s; border-radius: 5px; }
+        .action-button { 
+            background: linear-gradient(to bottom, var(--primary-color), var(--primary-dark)); 
+            color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 500; 
+            cursor: pointer; transition: all 0.2s; margin-top: 1rem; width: 100%; position: relative;
+            overflow: hidden;
+        }
+
+        .action-button span, .action-button::after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: clip-path var(--brew-duration, 0.4s) linear, color 0.2s;
+        }
+        
+        .action-button span {
+            z-index: 2;
+            color: white;
+            transition: color 0.1s linear;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: rgba(0,0,0,0.2);
+            z-index: 1;
+            transition: height var(--brew-duration, 0.4s) linear;
+        }
+
+        .action-button::after {
+            content: attr(data-text);
+            color: var(--accent-color);
+            background: transparent;
+            clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+            z-index: 3;
+        }
+        
+        .action-button.brewing span {
+            color: transparent;
+        }
+
+        .action-button.brewing::before {
+            height: 100%;
+        }
+
+        .action-button.brewing::after {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+        
+        .action-button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .action-button:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
+        
+        .timer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .details-tabs { display: flex; margin-bottom: 1rem; border-bottom: 1px solid #ddd; }
+        .tab { padding: 0.5rem 1rem; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab.active { border-bottom-color: var(--primary-color); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .recipe-details { font-size: 0.9rem; }
+        .recipe-ingredients { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .ingredient-item, .brewing-item { display: flex; align-items: center; gap: 0.5rem; background: #e9e2d9; padding: 0.4rem 0.8rem; border-radius: 8px; width: 100%; }
+        .ingredient-icon, .brewing-icon { width: 24px; height: 24px; color: var(--primary-dark); }
+        .ingredient-name, .brewing-name { font-weight: 500; text-transform: capitalize;}
+        .achievements { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;}
+        
+        #inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 1rem;
+        }
+        .inventory-item-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .inventory-item-card .item-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 0.5rem;
+            color: var(--primary-dark);
+        }
+        .inventory-item-card .item-icon svg { width: 100%; height: 100%; }
+        .inventory-item-name { font-weight: 500; font-size: 0.9rem; }
+        .inventory-details {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 0.8rem;
+            background: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin: 0.25rem 0;
+        }
+        .detail-price {
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        .detail-unit {
+            color: #555;
+            font-weight: 500;
+        }
+        .inventory-stock { font-size: 0.8rem; opacity: 0.7; margin: 0.25rem 0; }
+        .restock-item { margin-top: auto; }
+        .restock-item input { width: 100%; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 0.25rem; }
+
+        #restock-summary { margin-top: 1rem; font-weight: bold; text-align: right; }
+        
+        .upgrades .upgrade-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .upgrade-item button { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
+        .recipe-section { margin-bottom: 1.25rem; }
+        .recipe-section:last-child { margin-bottom: 0; }
+        .recipe-section-title { display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-display); color: var(--primary-dark); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--secondary-color); font-size: 1.1rem; }
+       
+        #messageContainer { position: fixed; top: 2rem; right: 2rem; z-index: 1000; display: flex; flex-direction: column; gap: 1rem; }
+        .message { padding: 1rem 1.5rem; border-radius: 8px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 1rem; opacity: 0; transform: translateX(100%); animation: slideIn 0.5s forwards, fadeOut 0.5s 4s forwards; }
+        .message.info { background: #2196F3; }
+        .message.success { background: var(--success-color); }
+        .message.warning { background: #FFC107; }
+        .message.error { background: #f44336; }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(100%);} }
+        
+        /* Guide Overlay */
+        .overlay-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.3s;
+            pointer-events: all;
+        }
+        .overlay-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .guide-modal {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 900px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .guide-modal h2 {
+            font-family: var(--font-display);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
+        }
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+        .guide-content {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .guide-content h3 {
+            font-family: var(--font-display);
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .recipe-entry {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #e9e2d9;
+            padding: 0.75rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .recipe-item {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .recipe-symbol {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+
+        /* Customer Guide Styles */
+        .customer-guide-entry {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 1.5rem;
+            align-items: center;
+            background: #e9e2d9;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .customer-guide-avatar {
+            width: 100px;
+            height: 100px;
+            background: #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #555;
+            overflow: hidden;
+            border: 3px solid var(--secondary-color);
+        }
+        .customer-guide-avatar svg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.2);
+        }
+        .customer-guide-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .customer-guide-name {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+        }
+        .sensitivity-bar-container {
+            width: 100%;
+            max-width: 200px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            position: relative;
+        }
+        .sensitivity-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--success-color), var(--accent-color), var(--error-color));
+            border-radius: 10px;
+        }
+        .sensitivity-indicator {
+            position: absolute;
+            top: -5px;
+            width: 4px;
+            height: 30px;
+            background: var(--primary-dark);
+            border-radius: 2px;
+            transform: translateX(-50%);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) { .panel:first-child { grid-column: 1 / -1; } }
+        @media (max-height: 750px), (max-width: 900px) { body { padding: 0; align-items: flex-start;} .game-container { border-radius: 0; height: 100vh; max-height: none; } header { padding: 0.5rem 1rem; } h1 { font-size: 1.5rem; } .stats-bar { gap: 1rem; } .stat-value { font-size: 1rem; } .main-game { grid-template-rows: 1fr auto; } .shop-view { min-height: 280px; } .controls-view { grid-template-columns: 1fr; padding: 0.5rem; gap: 0.5rem; overflow-y: auto; } .panel { max-height: none; } }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- HEADER -->
+        <header>
+            <h1><i class="fas fa-mug-hot" style="margin-right: 10px;"></i> The Grand Pour</h1>
+            <div class="header-controls">
+                <div class="stats-bar">
+                    <div class="stat"><div class="stat-value" id="money">$100</div><div class="stat-label">Money</div></div>
+                    <div class="stat"><div class="stat-value" id="reputation">★☆☆☆☆</div><div class="stat-label">Reputation</div></div>
+                    <div class="stat"><div class="stat-value" id="day">Day 1</div><div class="stat-label">Day</div></div>
+                    <div class="stat"><div class="stat-value" id="customers">0/8</div><div class="stat-label">Served</div></div>
+                </div>
+                <button id="guideButton" class="header-btn"><i class="fas fa-book-open"></i></button>
+                <button id="customerGuideButton" class="header-btn"><i class="fas fa-users"></i></button>
+                <button id="ambientToggle" class="header-btn"><i class="fas fa-wind"></i></button>
+                <button id="musicToggle" class="header-btn"><i class="fas fa-music"></i></button>
+                <button id="soundToggle" class="header-btn"><i class="fas fa-volume-up"></i></button>
+            </div>
+        </header>
+
+        <!-- MAIN GAME AREA -->
+        <main class="main-game">
+            <div class="shop-view">
+                <div class="shop-flex-container">
+                    <div id="baristaArea">
+                         <svg class="barista-svg" viewBox="0 0 150 250" xmlns="http://www.w3.org/2000/svg"><g id="barista"><rect x="35" y="100" width="80" height="150" rx="10" fill="#795548"/><circle cx="75" cy="60" r="40" fill="#fce4ec"/><circle cx="60" cy="55" r="5" fill="#333"/><circle cx="90" cy="55" r="5" fill="#333"/><path d="M65 75 Q75 85 85 75" stroke="#333" stroke-width="3" fill="none"/></g></svg>
+                    </div>
+                    <div id="prepArea">
+                         <div class="prep-station-container">
+                            <div class="prep-station"></div>
+                            <div id="craftingGrid">
+                                <div class="crafting-input-area">
+                                    <div class="slot-container">
+                                        <div class="crafting-slot" id="equipmentCraftSlot" data-index="0"></div>
+                                        <div class="slot-label">Equipment</div>
+                                    </div>
+                                    <div class="slot-container">
+                                        <div class="crafting-slot ingredient-craft-slot" data-index="1"></div>
+                                        <div class="slot-label">Ingredient</div>
+                                    </div>
+                                     <div class="slot-container">
+                                        <div class="crafting-slot ingredient-craft-slot" data-index="2"></div>
+                                        <div class="slot-label">Ingredient</div>
+                                    </div>
+                                    <div class="slot-container">
+                                        <div class="crafting-slot ingredient-craft-slot" data-index="3"></div>
+                                        <div class="slot-label">Cup</div>
+                                    </div>
+                                </div>
+                                <div class="crafting-controls">
+                                     <button id="brewButton" class="action-button"><span>Brew</span></button>
+                                     <div id="brewingTimerDisplay" style="display: none;"></div>
+                                     <i class="fas fa-arrow-right brewing-arrow"></i>
+                                </div>
+                                <div class="slot-container">
+                                    <div class="crafting-slot" id="resultSlot"></div>
+                                    <div class="slot-label">Result</div>
+                                </div>
+                            </div>
+                         </div>
+                        <div id="animationArea">
+                             <div class="weighing-scale" id="weighingScale">
+                                <div class="prep-bowl" id="prepBowl">
+                                    <div class="coffee-grounds" id="coffeeGrounds"></div>
+                                </div>
+                                <div class="scale-plate"></div>
+                                <div class="scale-base"></div>
+                                <div class="scale-display" id="scaleDisplay">0g</div>
+                            </div>
+                            <div class="prep-cup" id="prepCup">
+                                <div class="liquid" id="cupLiquid"></div>
+                                <div class="steam-container" id="steamContainer">
+                                    <div class="steam-particle" style="left: 20%; animation-delay: 0s;"></div>
+                                    <div class="steam-particle" style="left: 50%; animation-delay: 0.7s;"></div>
+                                    <div class="steam-particle" style="left: 80%; animation-delay: 1.4s;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="shelvesStation">
+                        <div class="station-shelf">
+                            <div class="shelf-title">Ingredients</div>
+                            <div class="shelf-items" id="ingredientShelf"></div>
+                        </div>
+                        <div class="station-shelf">
+                            <div class="shelf-title">Equipment</div>
+                            <div class="shelf-items" id="equipmentShelf"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="intermediateProductArea">
+                    <div class="tray-title">Preparation Tray</div>
+                    <div id="trayItems"></div>
+                </div>
+
+                <div id="customerArea"></div>
+                <div class="counter-area"></div>
+            </div>
+
+            <!-- CONTROLS (BOTTOM) -->
+            <div class="controls-view">
+                <div class="panel">
+                     <div class="panel-title">Menu & Order</div>
+                     <div class="panel-content">
+                         <div class="menu-items"></div>
+                         <div id="orderDisplay">
+                             <p id="orderStatus">Waiting for customer...</p>
+                             <div id="patienceMeterContainer"><div id="patienceMeter" style="width: 100%;"></div></div>
+                             <button class="action-button" id="nextDayButton" style="display: none;"><span>Next Day</span></button>
+                        </div>
+                     </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-title">Recipe & Brewing</div>
+                    <div class="panel-content" id="recipePanel">
+                        <div id="recipeDetails" class="recipe-details">
+                            <p>Select a menu item to see the recipe.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                     <div class="panel-title">Shop Details</div>
+                     <div class="panel-content">
+                        <div class="details-tabs">
+                            <div class="tab active" data-tab="inventory">Inventory</div>
+                            <div class="tab" data-tab="upgrades">Upgrades</div>
+                            <div class="tab" data-tab="stats">Stats</div>
+                        </div>
+                        <!-- MODIFIED/IMPROVED INVENTORY SECTION -->
+                        <div id="inventoryContent" class="tab-content active">
+                            <div id="inventory-grid"></div>
+                            <div id="restock-summary">
+                                <strong>Total Cost: $<span id="restock-total">0.00</span></strong>
+                            </div>
+                            <button class="action-button" id="purchaseButton"><span>Purchase</span></button>
+                        </div>
+                        <div id="upgradesContent" class="tab-content">
+                            <div class="upgrades"></div>
+                        </div>
+                        <div id="statsContent" class="tab-content">
+                            <div class="achievements"></div>
+                             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                <button class="action-button" id="saveGameButton"><span>Save</span></button>
+                                <button class="action-button" id="loadGameButton"><span>Load</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="messageContainer"></div>
+
+    <div id="guideOverlay" class="overlay-container hidden">
+        <div class="guide-modal">
+            <button id="closeGuideButton" class="close-button">&times;</button>
+            <h2>The Grand Pour - Recipe Guide</h2>
+            <div id="guideContent" class="guide-content">
+                <!-- JS will populate this -->
+            </div>
+        </div>
+    </div>
+
+    <div id="customerGuideOverlay" class="overlay-container hidden">
+        <div class="guide-modal">
+            <button id="closeCustomerGuideButton" class="close-button">&times;</button>
+            <h2>Customer Guide</h2>
+            <div id="customerGuideContent" class="guide-content">
+                <!-- JS will populate this -->
+            </div>
+        </div>
+    </div>
+
+
+ <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const game = {
+            // --- STATE ---
+            getInitialState() {
+                return {
+                    gameActive: true, money: 100, reputation: 1, day: 1, customersServedToday: 0, maxCustomersPerDay: 8,
+                    dailyCosts: 5, selectedMenuItem: 'espresso', currentCustomer: null, 
+                    soundEnabled: true,
+                    musicEnabled: true,
+                    ambientEnabled: true,
+                    craftingGrid: [null, null, null, null], // eq, ing1, ing2, cup
+                    brewResult: null,
+                    prepInventory: {}, // Intermediate products
+                    totalLiquidInCup: 0,
+                    timers: {
+                        brew: { active: false, remaining: 0, interval: null, sound: null }, // MODIFIED: Added sound tracking
+                    },
+                    animationTimeout: null,
+                    achievements: { cupsServed: 0, perfectBrews: 0, moneyEarned: 0, tipsEarned: 0 },
+                    inventory: { 'coffee-beans': 500, 'water': 5000, 'milk': 2000, 'syrup': 500, 'cup': 50 },
+                    restockOptions: {
+                        'coffee-beans': { name: 'Coffee Beans (250g)', key: 'coffee-beans', amount: 250, cost: 12.50 },
+                        'water': { name: 'Water (1000ml)', key: 'water', amount: 1000, cost: 1.00 },
+                        'milk': { name: 'Milk (1000ml)', key: 'milk', amount: 1000, cost: 5.00 },
+                        'syrup': { name: 'Syrup (250ml)', key: 'syrup', amount: 250, cost: 5.00 },
+                        'cup': { name: 'Cups (sleeve of 25)', key: 'cup', amount: 25, cost: 2.50 }
+                    },
+                    equipment: {
+                        grinder: { level: 1, baseTime: 7, unlocked: true, unlockCost: 0, anim: 'weighing' },
+                        'espresso-machine': { level: 1, baseTime: 7, unlocked: true, unlockCost: 0, anim: 'pouring' },
+                        'milk-steamer': { level: 0, baseTime: 7, unlocked: false, unlockCost: 150, anim: 'pouring' },
+                        'milk-frother': { level: 0, baseTime: 5, unlocked: false, unlockCost: 120, anim: 'pouring' },
+                        'syrup-pump': { level: 0, baseTime: 4, unlocked: false, unlockCost: 100, anim: 'pouring' },
+                        'drip-brewer': { level: 0, baseTime: 10, unlocked: false, unlockCost: 200, anim: 'pouring' },
+                    },
+                    recipes: {
+                        'ground-coffee': { name: 'Ground Coffee', creates: 'ground-coffee', pattern: ['grinder', 'coffee-beans', null, null], ingredients: { 'coffee-beans': 18 } },
+                        'espresso-shot': { name: 'Espresso Shot', creates: 'espresso-shot', pattern: ['espresso-machine', 'ground-coffee', 'water', null], ingredients: { 'ground-coffee': 1, 'water': 36 } },
+                        'steamed-milk': { name: 'Steamed Milk', creates: 'steamed-milk', pattern: ['milk-steamer', 'milk', null, null], ingredients: { 'milk': 150 } },
+                        'foamed-milk': { name: 'Foamed Milk', creates: 'foamed-milk', pattern: ['milk-frother', 'milk', null, null], ingredients: { 'milk': 100 } },
+                        'pumped-syrup': { name: 'Pumped Syrup', creates: 'pumped-syrup', pattern: ['syrup-pump', 'syrup', null, null], ingredients: { 'syrup': 30 } },
+                        'brewed-coffee': { name: 'Brewed Coffee', creates: 'brewed-coffee', pattern: ['drip-brewer', 'ground-coffee', 'water', null], ingredients: { 'ground-coffee': 1, 'water': 300 } },
+                        espresso: { name: 'Espresso', basePrice: 3.00, price: 3.00, final: true, pattern: [null, 'espresso-shot', null, 'cup'], ingredients: {'espresso-shot': 1, 'cup': 1} },
+                        americano: { name: 'Americano', basePrice: 3.50, price: 3.50, final: true, pattern: [null, 'espresso-shot', 'water', 'cup'], ingredients: {'espresso-shot': 1, 'water': 120, 'cup': 1} },
+                        latte: { name: 'Latte', basePrice: 4.50, price: 4.50, final: true, pattern: [null, 'espresso-shot', 'steamed-milk', 'cup'], ingredients: {'espresso-shot': 1, 'steamed-milk': 1, 'cup': 1} },
+                        cappuccino: { name: 'Cappuccino', basePrice: 4.25, price: 4.25, final: true, pattern: [null, 'espresso-shot', 'foamed-milk', 'cup'], ingredients: {'espresso-shot': 1, 'foamed-milk': 1, 'cup': 1} },
+                        mocha: { name: 'Mocha', basePrice: 5.00, price: 5.00, final: true, pattern: [null, 'espresso-shot', 'steamed-milk', 'pumped-syrup', 'cup'], ingredients: {'espresso-shot': 1, 'steamed-milk': 1, 'pumped-syrup': 1, 'cup': 1} },
+                        'filter-coffee': { name: 'Filter Coffee', basePrice: 2.50, price: 2.50, final: true, pattern: [null, 'brewed-coffee', null, 'cup'], ingredients: {'brewed-coffee': 1, 'cup': 1} }
+                    },
+                    customerTypes: {
+                        student: { name: 'Student', priceSensitivity: 0.9, patience: 80, discovered: true, tipMultiplier: [0.1, 0.5], svg: `<svg class="customer-svg" viewBox="0 0 120 180"><g><rect x="20" y="80" width="80" height="100" rx="10" fill="#4682B4"/><path d="M20 90 Q60 70 100 90 L100 80 Q60 60 20 80 Z" fill="#5a9bd8" /><circle cx="60" cy="45" r="30" fill="#f5deb3"/><circle cx="50" cy="40" r="5" fill="#222"/><circle cx="70" cy="40" r="5" fill="#222"/><path d="M55 55 Q60 60 65 55" stroke="#222" stroke-width="2" fill="none"/></g></svg>` },
+                        tourist: { name: 'Tourist', priceSensitivity: 1.1, patience: 100, discovered: true, tipMultiplier: [0.2, 0.75], svg: `<svg class="customer-svg" viewBox="0 0 120 180"><g><rect x="20" y="70" width="80" height="110" rx="10" fill="#87ceeb"/><circle cx="60" cy="40" r="30" fill="#f5deb3"/><circle cx="50" cy="35" r="5" fill="#222"/><circle cx="70" cy="35" r="5" fill="#222"/><path d="M55 50 Q60 55 65 50" stroke="#222" stroke-width="2" fill="none"/><path d="M25,25 Q60,10 95,25 L90,25 Q60,18 30,25 Z" fill="#d2b48c"/><path d="M35,24 Q60,15 85,24 L80,24 Q60,20 40,24 Z" fill="#a0522d"/><rect x="45" y="90" width="30" height="20" rx="3" fill="#333"/><circle cx="60" cy="100" r="7" fill="#555"/><path d="M40,70 Q60,85 80,70" stroke="#222" stroke-width="2" fill="none"/></g></svg>` },
+                        'office-worker': { name: 'Office Worker', priceSensitivity: 1.3, patience: 60, discovered: true, tipMultiplier: [0.5, 1.0], svg: `<svg class="customer-svg" viewBox="0 0 120 180"><g><rect x="20" y="70" width="80" height="110" rx="10" fill="#333"/><rect x="45" y="70" width="30" height="30" fill="#fff"/><path d="M45 85 L 75 85" stroke="#333" stroke-width="2"/><circle cx="60" cy="40" r="30" fill="#f5deb3"/><circle cx="50" cy="35" r="5" fill="#222"/><circle cx="70" cy="35" r="5" fill="#222"/><path d="M55 50 Q60 55 65 50" stroke="#222" stroke-width="2" fill="none"/></g></svg>` },
+                        'food-critic': { name: 'Food Critic', priceSensitivity: 1.8, patience: 150, discovered: false, tipMultiplier: [1.0, 2.0], svg: `<svg class="customer-svg" viewBox="0 0 120 180"><g><rect x="20" y="70" width="80" height="110" rx="10" fill="#a0522d"/><circle cx="60" cy="40" r="30" fill="#f5deb3"/><path d="M40 10h40v10H40z" fill="#333"/><circle cx="50" cy="35" r="5" fill="#222"/><circle cx="75" cy="35" r="8" stroke="#333" stroke-width="3" fill="none"/><path d="M55 50 Q60 55 65 50" stroke="#222" stroke-width="2" fill="none"/></g></svg>` },
+                        celebrity: { name: 'Celebrity', priceSensitivity: 2.5, patience: 90, discovered: false, tipMultiplier: [2.0, 3.0], svg: `<svg class="customer-svg" viewBox="0 0 120 180"><g><rect x="20" y="70" width="80" height="110" rx="10" fill="gold"/><circle cx="60" cy="40" r="30" fill="#f5deb3"/><circle cx="50" cy="35" r="5" fill="#222"/><circle cx="70" cy="35" r="5" fill="#222"/><path d="M40 30 H 80 L 75 45 H 45 Z" fill="#222"/><path d="M55 55 Q60 60 65 55" stroke="#222" stroke-width="2" fill="none"/></g></svg>` },
+                    },
+                    mysteryCustomerRates: {
+                        'food-critic': { base: 0.15, current: 0.15, cap: 0.25, increment: 0.01 },
+                        celebrity: { base: 0.05, current: 0.05, cap: 0.15, increment: 0.01 },
+                    }
+                }
+            },
+            state: {}, dom: {}, sounds: {}, draggedItem: null,
+            customerInterval: null,
+            toneStarted: false,
+            itemSVGs: {
+                'coffee-beans': `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,6C12,6,10,2,6,2C2.69,2,1,4.69,1,8C1,11.31,3,14,5,14C5,14,7,18,11,18C14.31,18,16,15.31,16,12C16,8.69,14,6,12,6M18.5,10C18.1,10,17.7,10.1,17.4,10.2C17.8,9,18,7.8,18,6.5C18,4,16,2,13.5,2C13.2,2,13,2.1,12.7,2.1C13.8,3.2,14.5,4.8,14.5,6.5C14.5,9.2,12.8,11.5,10.5,12.4C10.7,12.8,11,13.1,11.5,13.5C12.8,14.8,14.6,15.5,16.5,15.5C19.6,15.5,22,13.1,22,10C22,10,20,10,18.5,10Z" /></svg>`,
+                'water': `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20M12,2A10,10 0 0,0 2,12C2,16.25 7,22.25 12,22.25C17,22.25 22,16.25 22,12A10,10 0 0,0 12,2Z" /></svg>`,
+                'milk': `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14,4H10A1,1 0 0,0 9,5V10.27L4.55,15.72A1,1 0 0,0 5.45,17.28L6,16.73V19A1,1 0 0,0 7,20H17A1,1 0 0,0 18,19V16.73L18.55,17.28A1,1 0 0,0 19.45,15.72L15,10.27V5A1,1 0 0,0 14,4Z" /></svg>`,
+                'syrup': `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15,22H9V19L10.2,17.8C10.6,17.4 10.4,17.1 10.4,17.1C10.4,17.1 10.4,16.9 10.2,16.7L9,15.5V12H15V15.5L13.8,16.7C13.6,16.9 13.6,17.1 13.6,17.1C13.6,17.1 13.4,17.4 13.8,17.8L15,19V22M13,2H11A1,1 0 0,0 10,3V4A1,1 0 0,0 11,5H13A1,1 0 0,0 14,4V3A1,1 0 0,0 13,2M17,6H7A2,2 0 0,0 5,8V10A2,2 0 0,0 7,12H9V10H7V8H17V10H15V12H17A2,2 0 0,0 19,10V8A2,2 0 0,0 17,6Z" /></svg>`,
+                'cup': `<svg viewBox="0 0 24 24" fill="#f0f0f0" stroke="gray" stroke-width="1"><path d="M4 4h16v1H4zm1 2h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6z" /></svg>`,
+                'ground-coffee': `<svg viewBox="0 0 24 24" fill="#654321"><path d="M2,2H22V22H2V2M12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14Z" /></svg>`,
+                'espresso-shot': `<svg viewBox="0 0 100 100"><rect x="30" y="80" width="40" height="10" fill="#ccc"/><path d="M25 20h50v60H25z" fill="rgba(59, 47, 47, 0.8)"/></svg>`,
+                'steamed-milk': `<svg viewBox="0 0 100 100"><rect x="30" y="80" width="40" height="10" fill="#ccc"/><path d="M25 20h50v60H25z" fill="rgba(255, 253, 208, 0.8)"/></svg>`,
+                'foamed-milk': `<svg viewBox="0 0 100 100"><g><path d="M25,80 C25,80 25,20 25,20 L75,20 C75,20 75,80 75,80 Z" fill="rgba(255, 253, 208, 0.8)"/><path d="M25,40 C35,30 45,45 55,35 C65,25 70,40 75,35 L75,20 L25,20 Z" fill="rgba(255,255,255,0.9)"/></g></svg>`,
+                'pumped-syrup': `<svg viewBox="0 0 100 100"><rect x="30" y="80" width="40" height="10" fill="#ccc"/><path d="M25 20h50v60H25z" fill="rgba(205, 133, 63, 0.8)"/></svg>`,
+                'brewed-coffee': `<svg viewBox="0 0 100 100"><rect x="30" y="80" width="40" height="10" fill="#ccc"/><path d="M25 20h50v60H25z" fill="rgba(101, 67, 33, 0.8)"/></svg>`,
+                grinder: `<svg class="shelf-item-svg" viewBox="0 0 100 100"><path fill="#aaa" d="M20 10h60v10H20z"/><path fill="#ccc" d="M30 20h40v50H30z"/><path fill="#aaa" d="M20 70h60v20H20z"/><circle cx="50" cy="45" r="10" fill="#fff"/></svg>`,
+                'espresso-machine': `<svg class="shelf-item-svg" viewBox="0 0 100 100"><path fill="#c0c0c0" d="M10 10h80v80H10z"/><path fill="#888" d="M20 70h20v20H20z"/><rect x="70" y="20" width="20" height="40" fill="#555"/></svg>`,
+                'milk-steamer': `<svg class="shelf-item-svg" viewBox="0 0 100 100"><path d="M 40 90 L 40 40 C 40 20 60 20 60 40 L 60 90 Z" fill="#b0c4de"/><path d="M 60 60 L 70 50 L 70 80 Z" fill="#888"/></svg>`,
+                'milk-frother': `<svg class="shelf-item-svg" viewBox="0 0 100 100"><path d="M 50 90 L 50 30" stroke="#888" stroke-width="4"/><path d="M 40 30 L 60 30 L 60 20 L 40 20 Z" fill="#aaa"/><circle cx="50" cy="90" r="10" stroke="#555" stroke-width="3" fill="none"/></svg>`,
+                'syrup-pump': `<svg class="shelf-item-svg" viewBox="0 0 100 100"><path d="M 50 10 C 60 10 60 20 60 20 L 60 50 L 40 50 L 40 20 C 40 20 40 10 50 10 Z" fill="#ffdead"/><rect x="30" y="50" width="40" height="40" rx="5" fill="#8b4513"/></svg>`,
+                'drip-brewer': `<svg class="shelf-item-svg" viewBox="0 0 100 100"><path d="M 20 10 L 80 10 L 60 50 L 40 50 Z" fill="#fff" stroke="#ccc" stroke-width="2"/><path d="M 30 50 L 70 50 L 70 90 L 30 90 Z" fill="#e0ffff" stroke="#ccc" stroke-width="2"/></svg>`,
+                'coffee-cup': `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.5,3H6A2.5,2.5 0 0,0 3.5,5.5V8.5A2.5,2.5 0 0,0 6,11H7V12A5,5 0 0,0 12,17A5,5 0 0,0 17,12V11H18A3,3 0 0,0 21,8V5A2,2 0 0,0 19,3H18.5M18.5,8H18V6H18.5A.5.5 0 0,1 19,6.5V7.5A.5.5 0 0,1 18.5,8Z" /></svg>`
+            },
+            
+            init() {
+                this.state = this.getInitialState();
+                this.cacheDom();
+                this.initSounds();
+                this.bindEvents();
+                document.querySelectorAll('.action-button').forEach(btn => {
+                    const span = btn.querySelector('span');
+                    if (span) {
+                        btn.dataset.text = span.textContent;
+                    }
+                });
+                
+                if (!this.loadGame()) {
+                    this.renderAll();
+                    this.showMessage('Welcome to The Grand Pour! Click anywhere to begin.', 'info');
+                }
+                this.renderGuide(); // Populate guide on start
+                this.renderCustomerGuide();
+                
+                setInterval(() => this.saveGame(), 120000); // Autosave every 2 minutes
+
+                // Debug audio status
+                setTimeout(() => this.checkAudioStatus(), 3000);
+            },
+
+            async startAudio() {
+                if (this.toneStarted) return;
+                await Tone.start();
+                this.toneStarted = true;
+                console.log("Audio context started");
+
+                // IMPORTANT: Start the ambient sounds
+                this.startAmbience();
+                this.startMusic();
+                this.startCustomerGeneration();
+                
+                this.showMessage('Cafe sounds activated!', 'success');
+            },
+
+            startCustomerGeneration() {
+                if (this.customerInterval) clearInterval(this.customerInterval);
+                 if (this.state.customersServedToday < this.state.maxCustomersPerDay) {
+                    // Initial customer spawn
+                    setTimeout(() => this.generateCustomer(), 2000);
+                }
+                this.customerInterval = setInterval(() => {
+                    if (!this.state.currentCustomer) this.generateCustomer();
+                }, 12000); // slightly longer interval
+            },
+
+            cacheDom() {
+                const D = (selector) => document.querySelector(selector);
+                const DA = (selector) => document.querySelectorAll(selector);
+                this.dom = {
+                    gameContainer: D('.game-container'),
+                    money: D('#money'), reputation: D('#reputation'), day: D('#day'), customers: D('#customers'),
+                    customerArea: D('#customerArea'), menuItemsContainer: D('.menu-items'),
+                    orderDisplay: D('#orderDisplay'), orderStatus: D('#orderStatus'),
+                    patienceMeter: D('#patienceMeter'), 
+                    nextDayButton: D('#nextDayButton'), 
+                    inventoryGrid: D('#inventory-grid'),
+                    restockTotal: D('#restock-total'),
+                    purchaseButton: D('#purchaseButton'),
+                    messageContainer: D('#messageContainer'), detailsTabs: DA('.tab-content'), tabButtons: D('.details-tabs'),
+                    recipeDetails: D('#recipeDetails'), upgradesContainer: D('.upgrades'),
+                    achievementsContainer: D('.achievements'), 
+                    soundToggle: D('#soundToggle'),
+                    musicToggle: D('#musicToggle'),
+                    ambientToggle: D('#ambientToggle'),
+                    saveGameButton: D('#saveGameButton'), loadGameButton: D('#loadGameButton'),
+                    ingredientShelf: D('#ingredientShelf'), equipmentShelf: D('#equipmentShelf'),
+                    craftingSlots: DA('.crafting-slot'), brewButton: D('#brewButton'),
+                    resultSlot: D('#resultSlot'),
+                    trayItems: D('#trayItems'),
+                    weighingScale: D('#weighingScale'), scaleDisplay: D('#scaleDisplay'),
+                    prepBowl: D('#prepBowl'), coffeeGrounds: D('#coffeeGrounds'),
+                    prepCup: D('#prepCup'), cupLiquid: D('#cupLiquid'),
+                    steamContainer: D('#steamContainer'),
+                    guideButton: D('#guideButton'), guideOverlay: D('#guideOverlay'),
+                    closeGuideButton: D('#closeGuideButton'), guideContent: D('#guideContent'),
+                    customerGuideButton: D('#customerGuideButton'), customerGuideOverlay: D('#customerGuideOverlay'),
+                    closeCustomerGuideButton: D('#closeCustomerGuideButton'), customerGuideContent: D('#customerGuideContent'),
+                    brewingTimerDisplay: D('#brewingTimerDisplay'),
+                };
+            },
+            
+            initSounds() {
+                // Master limiter to prevent clipping/distortion
+                const masterLimiter = new Tone.Limiter(-6).toDestination();
+
+                // Shared reverb for a cohesive coffee shop ambience
+                const reverb = new Tone.Reverb(2.5).connect(masterLimiter);
+                reverb.wet.value = 0.3; // REDUCED for more clarity
+
+                // --- AMBIENCE LAYER - REFINED FOR CLARITY ---
+                this.sounds.ambientBus = new Tone.Gain(0);
+                const ambienceFilter = new Tone.Filter(3000, "lowpass");
+                
+                this.sounds.ambientBus.chain(ambienceFilter, masterLimiter);
+                this.sounds.ambientBus.chain(ambienceFilter, reverb);
+
+                // 1. Base Room Tone - Kept low
+                const roomTone = new Tone.Noise('brown').set({ 
+                    volume: -28, 
+                    fadeIn: 2 
+                }).connect(this.sounds.ambientBus).start();
+
+                // 2. Distant Chitchat - more sparse and softer
+                const murmurSynth = new Tone.PolySynth(Tone.AMSynth, {
+                    harmonicity: 1.1, // Softer tone
+                    envelope: { attack: 0.05, decay: 0.2, sustain: 0.1, release: 0.2 },
+                    modulation: { type: "sine" },
+                    modulationEnvelope: { attack: 0.05, decay: 0.1, sustain: 0.2, release: 0.2 },
+                    volume: -22
+                }).connect(this.sounds.ambientBus);
+
+                const chatterLoop = new Tone.Pattern((time, note) => {
+                    murmurSynth.triggerAttackRelease(note, "8n", time);
+                }, ["C2", null, "E2", null, "G2", "D2", null, null], "randomWalk").start(0); // More silence
+                chatterLoop.interval = "3n";
+                chatterLoop.humanize = true;
+
+                // 3. Ceramic Clinks & Spoon Stirs - quicker, less resonant
+                const clinkSynth = new Tone.MetalSynth({
+                    frequency: 500,
+                    envelope: { attack: 0.001, decay: 0.1, release: 0.05 }, // Shorter sound
+                    harmonicity: 4.1,
+                    modulationIndex: 18,
+                    resonance: 2500, // Less ringing
+                    octaves: 1.5,
+                    volume: -18 
+                }).connect(this.sounds.ambientBus);
+
+                const clinkLoop = new Tone.Loop(time => {
+                    if (Math.random() > 0.6) { // Less frequent
+                        clinkSynth.frequency.value = Tone.Midi(Math.random() * 12 + 80).toFrequency();
+                        clinkSynth.triggerAttack(time);
+                    }
+                }, "13s").start(2);
+                clinkLoop.humanize = true;
+
+                // 4. Espresso Machine Hiss - shorter and less frequent
+                const hissSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.2, decay: 1.0, sustain: 0, release: 0.3 }, // Shorter
+                    volume: -22 
+                }).connect(this.sounds.ambientBus);
+
+                const machineLoop = new Tone.Loop(time => {
+                    if (Math.random() > 0.7) { // Less frequent
+                        hissSynth.triggerAttack(time);
+                    }
+                }, "25s").start(5);
+                machineLoop.humanize = true;
+
+                // 5. Light Footsteps/Scrapes - more defined sound
+                const scrapeSynth = new Tone.NoiseSynth({
+                    noise: { type: 'brown' },
+                    envelope: { attack: 0.02, decay: 0.2, sustain: 0, release: 0.1 }, // Sharper attack
+                    filter: { type: 'bandpass', frequency: 800, Q: 0.5 }, // More focused frequency
+                    volume: -24
+                }).connect(this.sounds.ambientBus);
+
+                const movementLoop = new Tone.Loop(time => {
+                    if (Math.random() > 0.5) {
+                        scrapeSynth.triggerAttack(time);
+                    }
+                }, "19s").start(8);
+                movementLoop.humanize = true;
+                
+                // --- Simple UI Sounds ---
+                const simpleSounds = {
+                    click: new Tone.MetalSynth({ frequency: 400, envelope: { attack: 0.001, decay: 0.1, release: 0.1 }, harmonicity: 3.1, modulationIndex: 16, resonance: 4000, octaves: 1.5, volume: -20 }).connect(reverb),
+                    drag: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0 }, volume: -25 }).connect(masterLimiter),
+                    drop: new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 2, envelope: { attack: 0.001, decay: 0.2, sustain: 0 }, volume: -15 }).connect(masterLimiter),
+                    cash: () => { const synth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.2, release: 0.2 }, volume: -12 }).connect(masterLimiter); synth.triggerAttackRelease("G5", "8n", Tone.now()); synth.triggerAttackRelease("E6", "8n", Tone.now() + 0.1); },
+                    success: () => { const synth = new Tone.Synth({ volume: -15 }).connect(reverb); synth.triggerAttackRelease("C5", "8n", Tone.now()); synth.triggerAttackRelease("G5", "8n", Tone.now() + 0.1); },
+                    fail: () => { const synth = new Tone.Synth({ oscillator: { type: 'square' }, volume: -20 }).connect(masterLimiter); synth.triggerAttackRelease("C3", "8n"); },
+                    finalBrew: () => { const synth = new Tone.MetalSynth({ frequency: 600, harmonicity: 5.1, modulationIndex: 10, envelope: { attack: 0.01, decay: 0.4 }, volume: -15 }).connect(reverb); synth.triggerAttackRelease("C6", "4n"); }
+                };
+                
+                // --- Complex, Continuous Equipment Sounds ---
+                const equipmentSounds = {
+                    grinder: {
+                        noise: new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.2, decay: 0.1, sustain: 1.0 }, volume: -22 }).connect(reverb),
+                        motor: new Tone.MonoSynth({ oscillator: { type: "sawtooth" }, filter: { type: "lowpass", frequency: 120 }, envelope: { attack: 0.2, decay: 0.1, sustain: 1.0 }, volume: -28 }).connect(reverb),
+                        start() { this.noise.triggerAttack(); this.motor.triggerAttack("G1"); },
+                        stop() { this.noise.triggerRelease(); this.motor.triggerRelease(); }
+                    },
+                    'espresso-machine': {
+                        hiss: new Tone.NoiseSynth({ noise: { type: 'white' }, filter: { type: 'bandpass', frequency: 3000, Q: 0.8 }, envelope: { attack: 0.3, sustain: 1.0 }, volume: -28 }).connect(reverb),
+                        pump: new Tone.Loop(time => {
+                            const synth = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 3, envelope: { attack: 0.01, decay: 0.1, sustain: 0 }, volume: -22 }).connect(masterLimiter);
+                            synth.triggerAttackRelease('C2', '16n', time);
+                        }, '8n'),
+                        start() { this.hiss.triggerAttack(); this.pump.start(0); },
+                        stop() { this.hiss.triggerRelease(); this.pump.stop(); }
+                    },
+                    'milk-steamer': {
+                        noise: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.2, sustain: 1.0, release: 0.5 }, volume: -25 }).connect(reverb),
+                        filter: new Tone.AutoFilter({ frequency: "2n", baseFrequency: 800, octaves: 3 }).start(),
+                        start() { this.noise.connect(this.filter).connect(reverb); this.noise.triggerAttack(); },
+                        stop() { this.noise.triggerRelease(); }
+                    },
+                    'milk-frother': { // REVISED for better control and sound
+                        whirr: new Tone.Oscillator(220, "sawtooth"),
+                        lfo: new Tone.LFO("16n", 210, 230).start(),
+                        filter: new Tone.Filter(1200, "lowpass"),
+                        ampEnv: new Tone.AmplitudeEnvelope({ attack: 0.2, decay: 0.1, sustain: 1.0, release: 0.5}),
+                        setup() {
+                            const volume = new Tone.Volume(-28).connect(reverb);
+                            this.lfo.connect(this.whirr.frequency);
+                            this.whirr.chain(this.filter, this.ampEnv, volume);
+                            return this;
+                        },
+                        start() { this.whirr.start(); this.ampEnv.triggerAttack(); },
+                        stop() { 
+                            this.ampEnv.triggerRelease();
+                            this.whirr.stop(Tone.now() + 0.5); // Stop oscillator after fade out
+                        }
+                    },
+                    'syrup-pump': {
+                        pump: new Tone.MembraneSynth({ octaves: 4, pitchDecay: 0.05, envelope: { attack: 0.01, decay: 0.2, sustain: 0 }, volume: -18 }).connect(masterLimiter),
+                        squish: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.05, decay: 0.1, sustain: 0 }, volume: -15 }).connect(masterLimiter),
+                        triggerAttackRelease() { this.pump.triggerAttackRelease("C2", "8n", Tone.now()); this.squish.triggerAttackRelease("16n", Tone.now() + 0.05); }
+                    },
+                    'drip-brewer': {
+                        drip: new Tone.MetalSynth({ frequency: 800, envelope: { attack: 0.001, decay: 0.1, release: 0.1 }, harmonicity: 0.5, modulationIndex: 1, octaves: 1, volume: -25 }).connect(reverb),
+                        part: null,
+                        start(duration) {
+                            const events = [];
+                            const numDrips = Math.floor(duration / 0.8);
+                            for (let i = 0; i < numDrips; i++) {
+                                events.push([i * 0.8, "C5"]);
+                            }
+                            this.part = new Tone.Part((time, note) => { this.drip.triggerAttackRelease(note, "32n", time); }, events).start(0);
+                        },
+                        stop() { if(this.part) { this.part.stop(); this.part.dispose(); } }
+                    }
+                };
+
+                equipmentSounds['milk-frother'].setup(); // Initialize the milk frother connections
+                this.sounds.synths = { ...simpleSounds, ...equipmentSounds };
+
+                // --- IMPROVED Soothing Background Music ---
+                const pad = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'fatsawtooth', count: 3, spread: 30 },
+                    envelope: { attack: 2, decay: 1, sustain: 0.5, release: 3 },
+                    volume: -28
+                }).connect(reverb);
+
+                const piano = new Tone.PolySynth(Tone.FMSynth, {
+                    harmonicity: 1.5,
+                    modulationIndex: 10,
+                    envelope: { attack: 0.01, decay: 1.5, sustain: 0.1, release: 2 },
+                    volume: -20
+                }).connect(reverb);
+                
+                const musicLoop = new Tone.Sequence((time, note) => {
+                    pad.triggerAttackRelease(note.chord, '1m', time);
+                    // Play piano notes with a slight delay for a more natural feel
+                    piano.triggerAttackRelease(note.melody[0], '2n', time + 0.1);
+                    piano.triggerAttackRelease(note.melody[1], '4n', time + 0.6);
+                    piano.triggerAttackRelease(note.melody[2], '4n', time + 1.2);
+                }, [
+                    { chord: ['C3', 'E4', 'G4', 'B4'], melody: ['E5', 'G5', 'C6'] },
+                    { chord: ['A3', 'C4', 'E4', 'G4'], melody: ['C5', 'E5', 'A5'] },
+                    { chord: ['D3', 'F4', 'A4', 'C5'], melody: ['F5', 'A5', 'D6'] },
+                    { chord: ['G3', 'B3', 'D4', 'F4'], melody: ['D5', 'G5', 'B5'] },
+                ], '1m').start(0); // '1m' is a full measure
+
+                this.sounds.backgroundMusic = musicLoop;
+                Tone.Transport.bpm.value = 65; // Slower for more ambience
+
+                setTimeout(() => {
+                    if (this.state.ambientEnabled && this.toneStarted) {
+                        this.startAmbience();
+                    }
+                }, 2000);
+            },
+
+            // MODIFIED: Handle new sound types
+            playSound(sound, ...args) {
+                if(!this.state.soundEnabled || !this.toneStarted) return;
+                const soundEffect = this.sounds.synths[sound];
+                if (!soundEffect) return;
+
+                if (typeof soundEffect.start === 'function') {
+                    soundEffect.start(...args); // For continuous sounds like grinder
+                } else if (typeof soundEffect.triggerAttackRelease === 'function') {
+                    soundEffect.triggerAttackRelease(...args); // For one-shot synths
+                } else if (typeof soundEffect === 'function') {
+                    soundEffect(); // For simple function-based sounds
+                }
+            },
+            
+            // NEW: Method to stop continuous sounds
+            stopSound(sound) {
+                if(!this.state.soundEnabled || !this.toneStarted) return;
+                const soundEffect = this.sounds.synths[sound];
+                if (soundEffect && typeof soundEffect.stop === 'function') {
+                    soundEffect.stop();
+                }
+            },
+
+            bindEvents() {
+                 this.dom.menuItemsContainer.addEventListener('click', e => {
+                    const menuItem = e.target.closest('.menu-item');
+                    if (menuItem) {
+                        this.playSound('click');
+                        this.state.selectedMenuItem = menuItem.dataset.item;
+                        this.renderMenu();
+                        this.renderRecipeDetails();
+                    }
+                });
+
+                this.dom.menuItemsContainer.addEventListener('change', e => {
+                    if (e.target.classList.contains('price-input')) {
+                        const key = e.target.dataset.item;
+                        let newPrice = parseFloat(e.target.value);
+                        if (isNaN(newPrice) || newPrice < 0) {
+                            newPrice = this.state.recipes[key].basePrice;
+                        }
+                        this.state.recipes[key].price = newPrice;
+                        this.renderMenu(); // Re-render to format price
+                    }
+                });
+                
+                this.dom.tabButtons.addEventListener('click', e => {
+                    if(e.target.classList.contains('tab')) {
+                        this.playSound('click');
+                        const tabName = e.target.dataset.tab;
+                        this.dom.tabButtons.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.dom.detailsTabs.forEach(c => c.classList.remove('active'));
+                        document.getElementById(`${tabName}Content`).classList.add('active');
+                    }
+                });
+
+                this.dom.upgradesContainer.addEventListener('click', e => {
+                    const upgradeButton = e.target.closest('.upgrade-btn');
+                    if (upgradeButton && !upgradeButton.disabled) {
+                        upgradeButton.disabled = true;
+                        this.playSound('click');
+                        const equipmentKey = upgradeButton.dataset.equipment;
+                        const eq = this.state.equipment[equipmentKey];
+                        if (eq.unlocked) {
+                            this.upgradeEquipment(equipmentKey);
+                        } else {
+                            this.unlockEquipment(equipmentKey);
+                        }
+                    }
+                });
+
+                this.dom.nextDayButton.addEventListener('click', () => this.startNextDay());
+                
+                this.dom.purchaseButton.addEventListener('click', () => {
+                    if (this.dom.purchaseButton.disabled) return;
+                    this.dom.purchaseButton.disabled = true;
+                    this.playSound('click');
+                    this.purchaseSupplies();
+                });
+
+                this.dom.inventoryGrid.addEventListener('input', () => this.updateRestockTotal());
+                this.dom.soundToggle.addEventListener('click', () => this.toggleSound());
+                this.dom.musicToggle.addEventListener('click', () => this.toggleMusic());
+                this.dom.ambientToggle.addEventListener('click', () => this.toggleAmbience());
+                this.dom.saveGameButton.addEventListener('click', () => this.saveGame());
+                this.dom.loadGameButton.addEventListener('click', () => this.loadGame());
+
+                this.dom.craftingSlots.forEach(slot => {
+                    slot.addEventListener('dragover', this.handleDragOver.bind(this));
+                    slot.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                    slot.addEventListener('drop', this.handleDrop.bind(this));
+                    slot.addEventListener('click', (e) => this.handleSlotClick(e));
+                });
+
+                this.dom.brewButton.addEventListener('click', () => this.handleBrew());
+                this.dom.resultSlot.addEventListener('click', () => this.handleResultClick());
+
+                this.dom.guideButton.addEventListener('click', () => { this.playSound('click'); this.dom.guideOverlay.classList.remove('hidden'); });
+                this.dom.closeGuideButton.addEventListener('click', () => { this.playSound('click'); this.dom.guideOverlay.classList.add('hidden'); });
+                this.dom.guideOverlay.addEventListener('click', (e) => {
+                    if (e.target === this.dom.guideOverlay) {
+                        this.dom.guideOverlay.classList.add('hidden');
+                    }
+                });
+                
+                this.dom.customerGuideButton.addEventListener('click', () => { this.playSound('click'); this.dom.customerGuideOverlay.classList.remove('hidden'); });
+                this.dom.closeCustomerGuideButton.addEventListener('click', () => { this.playSound('click'); this.dom.customerGuideOverlay.classList.add('hidden'); });
+                this.dom.customerGuideOverlay.addEventListener('click', (e) => {
+                    if (e.target === this.dom.customerGuideOverlay) {
+                        this.dom.customerGuideOverlay.classList.add('hidden');
+                    }
+                });
+            },
+
+            // --- RENDER FUNCTIONS ---
+            renderAll() {
+                this.updateAllUI();
+                this.renderMenu();
+                this.renderRecipeDetails();
+                this.renderShelves();
+                this.renderIntermediateProducts();
+                this.renderCraftingGrid();
+                this.renderBrewResult();
+                this.renderOrder();
+                this.renderUpgrades();
+                this.renderTimers();
+            },
+            
+            updateAllUI() {
+                this.validateGameState();
+                this.dom.money.textContent = `$${this.state.money.toFixed(2)}`;
+                this.dom.reputation.textContent = '★'.repeat(Math.round(this.state.reputation)) + '☆'.repeat(5 - Math.round(this.state.reputation));
+                this.dom.day.textContent = `Day ${this.state.day}`;
+                this.dom.customers.textContent = `${this.state.customersServedToday}/${this.state.maxCustomersPerDay}`;
+                this.dom.soundToggle.innerHTML = `<i class="fas ${this.state.soundEnabled ? 'fa-volume-up' : 'fa-volume-xmark'}"></i>`;
+                this.dom.musicToggle.innerHTML = `<i class="fas ${this.state.musicEnabled ? 'fa-music' : 'fa-music-slash'}"></i>`;
+                this.dom.ambientToggle.innerHTML = `<i class="fas ${this.state.ambientEnabled ? 'fa-wind' : 'fa-ban'}"></i>`;
+                this.renderInventory();
+                this.renderAchievements();
+            },
+            
+            renderMenu() {
+                this.dom.menuItemsContainer.innerHTML = '';
+                Object.keys(this.state.recipes).forEach(key => {
+                    const recipe = this.state.recipes[key];
+                    if (!recipe.final) return;
+
+                    const allEquipUnlocked = Object.keys(recipe.ingredients).every(ingKey => {
+                        if (this.state.inventory[ingKey] !== undefined) return true;
+                        if (this.state.prepInventory[ingKey] !== undefined) return true;
+                        const intermediateRecipe = Object.values(this.state.recipes).find(r => r.creates === ingKey);
+                        if(intermediateRecipe) {
+                            const requiredEq = intermediateRecipe.pattern[0];
+                            return this.state.equipment[requiredEq] && this.state.equipment[requiredEq].unlocked;
+                        }
+                        return false;
+                    });
+
+
+                    if (!allEquipUnlocked) return;
+
+                    const el = document.createElement('div');
+                    el.className = 'menu-item';
+                    el.dataset.item = key;
+                    if(this.state.selectedMenuItem === key) el.classList.add('active');
+                    el.innerHTML = `<div class="item-name">${recipe.name}</div><div class="item-price-container">$ <input type="number" class="price-input" data-item="${key}" value="${recipe.price.toFixed(2)}" step="0.25" min="0"></div>`;
+                    this.dom.menuItemsContainer.appendChild(el);
+                });
+            },
+            
+            renderRecipeDetails() {
+                const recipe = this.state.recipes[this.state.selectedMenuItem];
+                if (!recipe || !recipe.final) {
+                    this.dom.recipeDetails.innerHTML = `<p>Select a final drink from the menu to see its recipe.</p>`;
+                    return;
+                }
+
+                const ingredientsHtml = `
+                    <div class="recipe-section">
+                        <div class="recipe-section-title"><i class="fas fa-list-alt"></i> Required Items</div>
+                        <div class="recipe-ingredients">
+                            ${Object.keys(recipe.ingredients).map(key => {
+                                const itemName = this.state.recipes[key]?.name || key.replace(/-/g, ' ');
+                                const amount = recipe.ingredients[key];
+                                return `<div class="ingredient-item">
+                                    <div class="ingredient-icon">${this.itemSVGs[key] || ''}</div>
+                                    <span class="ingredient-name">${amount} x ${itemName}</span>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>`;
+                this.dom.recipeDetails.innerHTML = ingredientsHtml;
+            },
+
+            renderInventory() {
+                this.dom.inventoryGrid.innerHTML = '';
+                for (const key in this.state.restockOptions) {
+                    const item = this.state.restockOptions[key];
+                    const stock = this.state.inventory[key];
+                    const card = document.createElement('div');
+                    card.className = 'inventory-item-card';
+
+                    let unitSuffix = 'g';
+                    if (key.includes('milk') || key.includes('water') || key.includes('syrup')) {
+                        unitSuffix = 'ml';
+                    } else if (key === 'cup') {
+                        unitSuffix = 'pcs';
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="item-icon">${this.itemSVGs[key] || ''}</div>
+                        <div class="inventory-item-name">${item.name.split(' (')[0]}</div>
+                        <div class="inventory-details">
+                           <span class="detail-price">$${item.cost.toFixed(2)}</span>
+                           <span class="detail-unit">/ ${item.amount}${unitSuffix}</span>
+                        </div>
+                        <div class="inventory-stock">Stock: ${stock}${unitSuffix}</div>
+                        <div class="restock-item">
+                             <input type="number" class="restock-quantity" data-item-key="${key}" min="0" value="0" placeholder="Qty">
+                        </div>
+                    `;
+                    this.dom.inventoryGrid.appendChild(card);
+                }
+                this.updateRestockTotal();
+            },
+
+            renderUpgrades() {
+                this.dom.upgradesContainer.innerHTML = '';
+                for(const key in this.state.equipment) {
+                    const eq = this.state.equipment[key];
+                    const el = document.createElement('div');
+                    el.className = 'upgrade-item';
+                    if (eq.unlocked) {
+                        const cost = (eq.level * 100);
+                        el.innerHTML = `<span>${key.replace(/-/g, ' ')} (Lvl ${eq.level})</span><button class="action-button upgrade-btn" data-equipment="${key}" ${this.state.money < cost ? 'disabled' : ''}><span>Upgrade ($${cost})</span></button>`;
+                    } else {
+                        const cost = eq.unlockCost;
+                        el.innerHTML = `<span>${key.replace(/-/g, ' ')}</span><button class="action-button upgrade-btn" data-equipment="${key}" ${this.state.money < cost ? 'disabled' : ''}><span>Unlock ($${cost})</span></button>`;
+                    }
+                    this.dom.upgradesContainer.appendChild(el);
+                }
+            },
+
+             renderAchievements() {
+                this.dom.achievementsContainer.innerHTML = Object.entries(this.state.achievements).map(([key, value]) => {
+                    const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                    const formattedValue = (key.includes('Earned')) ? `$${value.toFixed(2)}` : value.toFixed(0);
+                    return `<div>${formattedKey}: <strong>${formattedValue}</strong></div>`;
+                }).join('');
+            },
+
+            renderShelves() {
+                this.dom.ingredientShelf.innerHTML = '';
+                this.dom.equipmentShelf.innerHTML = '';
+                
+                Object.keys(this.state.inventory).forEach(key => {
+                    const el = this.createShelfItem(key, 'ingredient', this.state.inventory[key]);
+                    this.dom.ingredientShelf.appendChild(el);
+                });
+
+                Object.keys(this.state.equipment).forEach(key => {
+                    const el = this.createShelfItem(key, 'equipment');
+                    this.dom.equipmentShelf.appendChild(el);
+                });
+            },
+
+            createShelfItem(key, type, count = 0) {
+                const el = document.createElement('div');
+                el.className = `shelf-item ${type}`;
+                el.dataset.item = key;
+                const itemName = key.replace(/-/g, ' ');
+
+                let innerHTML = `
+                    <div class="shelf-item-svg">${this.itemSVGs[key]}</div>
+                    <div class="shelf-item-tooltip">${itemName}</div>
+                `;
+
+                if (type === 'ingredient') {
+                    if (count > 0) {
+                         innerHTML += `<div class="item-count">${count}</div>`;
+                    }
+                    el.draggable = count > 0;
+                    el.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    if (count <= 0) {
+                        el.style.opacity = '0.5';
+                    }
+                } else if (type === 'equipment') {
+                    const eq = this.state.equipment[key];
+                    el.draggable = eq.unlocked;
+                     el.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    if(!eq.unlocked) {
+                        el.classList.add('locked');
+                    }
+                }
+                
+                el.innerHTML = innerHTML;
+                return el;
+            },
+
+            renderIntermediateProducts() {
+                this.dom.trayItems.innerHTML = '';
+                Object.keys(this.state.prepInventory).forEach(key => {
+                    const count = this.state.prepInventory[key];
+                    if (count > 0) {
+                        const el = document.createElement('div');
+                        el.className = 'tray-item';
+                        el.dataset.item = key;
+                        el.draggable = true;
+                        el.innerHTML = `<div class="shelf-item-svg">${this.itemSVGs[key]}</div><div class="item-count">${count}</div>`;
+                        el.addEventListener('dragstart', this.handleDragStart.bind(this));
+                        this.dom.trayItems.appendChild(el);
+                    }
+                });
+            },
+
+            renderCraftingGrid() {
+                this.state.craftingGrid.forEach((item, index) => {
+                    const slot = this.dom.craftingSlots[index];
+                    if (item) {
+                        slot.innerHTML = `<div class="shelf-item-svg">${this.itemSVGs[item]}</div>`;
+                    } else {
+                        slot.innerHTML = '';
+                    }
+                });
+            },
+
+            renderBrewResult() {
+                const slot = this.dom.resultSlot;
+                if (this.state.brewResult) {
+                     slot.innerHTML = `<div class="shelf-item-svg">${this.itemSVGs[this.state.brewResult]}</div>`;
+                } else {
+                    slot.innerHTML = '';
+                }
+            },
+            
+            renderOrder() {
+                if (this.state.currentCustomer) {
+                    const order = this.state.recipes[this.state.currentCustomer.order.key];
+                    this.dom.orderStatus.innerHTML = `An order for <strong>${order.name}</strong>`;
+                    this.dom.nextDayButton.style.display = 'none';
+                } else {
+                    this.dom.orderStatus.textContent = 'Waiting for customer...';
+                    if (this.state.customersServedToday >= this.state.maxCustomersPerDay && this.state.gameActive) {
+                         this.dom.orderStatus.textContent = 'End of the day!';
+                         this.dom.nextDayButton.style.display = 'block';
+                    }
+                }
+            },
+
+            renderGuide() {
+                this.dom.guideContent.innerHTML = '';
+                const intermediateContainer = document.createElement('div');
+                intermediateContainer.innerHTML = '<h3>Intermediate Items</h3>';
+
+                const finalContainer = document.createElement('div');
+                finalContainer.innerHTML = '<h3>Final Drinks</h3>';
+
+                for (const key in this.state.recipes) {
+                    const recipe = this.state.recipes[key];
+                    const entry = document.createElement('div');
+                    entry.className = 'recipe-entry';
+                    let html = '';
+
+                    if (recipe.final) {
+                        const ingredientsHTML = Object.keys(recipe.ingredients).map(ingKey =>
+                            `<div class="recipe-item" title="${ingKey.replace(/-/g, ' ')}">${this.itemSVGs[ingKey]}</div>`
+                        ).join('<span class="recipe-symbol">+</span>');
+
+                        html = `${ingredientsHTML} <span class="recipe-symbol">=</span> <div class="recipe-item" title="${recipe.name}">${this.itemSVGs['coffee-cup']}</div> <strong style="margin-left: 1rem;">${recipe.name}</strong>`;
+                        entry.innerHTML = html;
+                        finalContainer.appendChild(entry);
+                    } else {
+                        const patternHTML = recipe.pattern.filter(p => p).map(item =>
+                            `<div class="recipe-item" title="${item.replace(/-/g, ' ')}">${this.itemSVGs[item]}</div>`
+                        ).join('<span class="recipe-symbol">+</span>');
+
+                        html = `${patternHTML} <span class="recipe-symbol">=</span> <div class="recipe-item" title="${recipe.creates.replace(/-/g, ' ')}">${this.itemSVGs[recipe.creates]}</div> <strong style="margin-left: 1rem;">${recipe.name}</strong>`;
+                        entry.innerHTML = html;
+                        intermediateContainer.appendChild(entry);
+                    }
+                }
+                this.dom.guideContent.appendChild(intermediateContainer);
+                this.dom.guideContent.appendChild(finalContainer);
+            },
+
+            renderCustomerGuide() {
+                this.dom.customerGuideContent.innerHTML = '';
+                for (const key in this.state.customerTypes) {
+                    const customer = this.state.customerTypes[key];
+                    const entry = document.createElement('div');
+                    entry.className = 'customer-guide-entry';
+                    
+                    const indicatorPosition = ((customer.priceSensitivity - 0.5) / 2.5) * 100;
+
+                    entry.innerHTML = `
+                        <div class="customer-guide-avatar">
+                            ${customer.discovered ? customer.svg : '<i class="fas fa-question"></i>'}
+                        </div>
+                        <div class="customer-guide-details">
+                            <div class="customer-guide-name">${customer.discovered ? customer.name : '??????'}</div>
+                            <div>Patience: ${customer.discovered ? customer.patience : '??'}</div>
+                            <div>Price Sensitivity:</div>
+                            <div class="sensitivity-bar-container">
+                                <div class="sensitivity-bar"></div>
+                                ${customer.discovered ? `<div class="sensitivity-indicator" style="left: ${indicatorPosition}%"></div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    this.dom.customerGuideContent.appendChild(entry);
+                }
+            },
+
+            renderTimers() {
+                // Brewing timer
+                if (this.state.timers.brew.active) {
+                    this.dom.brewingTimerDisplay.textContent = this.state.timers.brew.remaining.toFixed(1) + 's';
+                    this.dom.brewingTimerDisplay.style.display = 'flex';
+                } else {
+                    this.dom.brewingTimerDisplay.style.display = 'none';
+                }
+            },
+
+            // --- GAMEPLAY LOGIC ---
+            startTimer(type, duration, onComplete, soundToPlay = null) { // MODIFIED: Added soundToPlay
+                if (this.state.timers[type].active) return;
+
+                this.state.timers[type].active = true;
+                this.state.timers[type].remaining = duration;
+                this.state.timers[type].sound = soundToPlay; // MODIFIED: Store the sound
+
+                if (soundToPlay) {
+                    this.playSound(soundToPlay, duration);
+                }
+
+                if (type === 'brew') {
+                    this.dom.brewButton.classList.add('brewing');
+                    const newText = 'Brewing...';
+                    this.dom.brewButton.dataset.text = newText;
+                    this.dom.brewButton.style.setProperty('--brew-duration', `${duration}s`);
+                }
+                
+                this.renderTimers();
+
+                this.state.timers[type].interval = setInterval(() => {
+                    this.state.timers[type].remaining -= 0.1;
+                    if (this.state.timers[type].remaining <= 0) {
+                        clearInterval(this.state.timers[type].interval);
+                        
+                        if (this.state.timers[type].sound) { // MODIFIED: Stop the sound
+                           this.stopSound(this.state.timers[type].sound);
+                           this.state.timers[type].sound = null;
+                        }
+
+                        this.state.timers[type].active = false;
+                        this.state.timers[type].remaining = 0;
+                        if (type === 'brew') {
+                            this.dom.brewButton.classList.remove('brewing');
+                            const newText = 'Brew';
+                            this.dom.brewButton.dataset.text = newText;
+                             // Set span text back to normal after animation
+                            setTimeout(() => {
+                                const brewSpan = this.dom.brewButton.querySelector('span');
+                                if(brewSpan) brewSpan.textContent = newText;
+                            }, 100) // Small delay to avoid flicker
+                        }
+                        onComplete();
+                    }
+                    this.renderTimers();
+                }, 100);
+            },
+
+            handleSlotClick(e) {
+                if(this.state.timers.brew.active) return;
+                this.playSound('click');
+                const index = parseInt(e.currentTarget.dataset.index, 10);
+                this.state.craftingGrid[index] = null;
+                this.renderCraftingGrid();
+            },
+
+            handleResultClick() {
+                if (!this.state.brewResult) return;
+                this.playSound('click');
+                const item = this.state.brewResult;
+                const recipe = Object.values(this.state.recipes).find(r => r.creates === item);
+
+                if (recipe && !recipe.final) {
+                    this.state.prepInventory[item] = (this.state.prepInventory[item] || 0) + 1;
+                    this.state.brewResult = null;
+                    this.renderBrewResult();
+                    this.renderIntermediateProducts();
+                    this.showMessage(`${item.replace(/-/g, ' ')} added to Preparation Tray!`, 'success');
+                } else if(recipe && recipe.final) {
+                     this.completeOrder(true);
+                     this.state.brewResult = null;
+                     this.renderBrewResult();
+                }
+            },
+
+            handleDragStart(e) {
+                if (this.state.timers.brew.active) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                const target = e.target.closest('[data-item]');
+                if (!target) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                const itemType = target.dataset.item;
+
+                if (this.state.craftingGrid.includes(itemType)) {
+                    e.preventDefault();
+                    return;
+                }
+                
+                this.playSound('drag');
+                
+                const isEquipment = this.state.equipment.hasOwnProperty(itemType);
+
+                this.draggedItem = {
+                    type: itemType,
+                    isEquipment: isEquipment,
+                    source: target.classList.contains('shelf-item') ? 'shelf' : 'tray'
+                };
+                
+                this.dom.craftingSlots.forEach((slot, index) => {
+                    const isCupSlot = parseInt(slot.dataset.index, 10) === 3;
+                    if ((index === 0 && isEquipment) || (index > 0 && !isEquipment)) {
+                         if( (isCupSlot && this.draggedItem.type === 'cup') || (!isCupSlot && this.draggedItem.type !== 'cup') || isEquipmentSlot){
+                            slot.classList.add('droppable');
+                        }
+                    }
+                });
+            },
+            
+            handleDragOver: e => e.preventDefault(),
+            handleDragLeave: (e) => e.currentTarget.classList.remove('droppable'),
+
+            handleDrop(e) {
+                e.preventDefault();
+                this.dom.craftingSlots.forEach(slot => slot.classList.remove('droppable'));
+                if (!this.draggedItem || this.state.timers.brew.active) return;
+
+                const slotIndex = parseInt(e.currentTarget.dataset.index, 10);
+                const isEquipmentSlot = slotIndex === 0;
+                const isCupSlot = slotIndex === 3;
+
+                if ( (isEquipmentSlot && this.draggedItem.isEquipment) ||
+                     (!isEquipmentSlot && !this.draggedItem.isEquipment) ) {
+
+                    if( (isCupSlot && this.draggedItem.type === 'cup') || (!isCupSlot && this.draggedItem.type !== 'cup') || (isEquipmentSlot) ){
+                        this.state.craftingGrid[slotIndex] = this.draggedItem.type;
+                        this.playSound('drop');
+                    } else {
+                         this.showMessage('That is not a cup!', 'warning');
+                    }
+                } else {
+                    this.showMessage('Wrong slot for this item!', 'warning');
+                }
+
+                this.renderCraftingGrid();
+                this.draggedItem = null;
+            },
+
+            handleBrew() {
+                if (this.state.timers.brew.active) {
+                    this.showMessage('Already brewing!', 'warning');
+                    return;
+                }
+                
+                // MODIFIED: Syrup pump is a one-shot sound, handle it immediately
+                if (this.state.craftingGrid[0] === 'syrup-pump') {
+                    this.playSound('syrup-pump');
+                } else {
+                    this.playSound('click');
+                }
+                
+                let currentPattern = [...this.state.craftingGrid];
+                let isFinalDrink = currentPattern[0] === null && currentPattern[3] === 'cup';
+
+                if (!isFinalDrink && !currentPattern[0]) {
+                    this.showMessage('Need equipment in the first slot!', 'warning');
+                    return;
+                }
+                
+                let ingredients = currentPattern.slice(1).filter(i => i !== null).sort();
+                if (ingredients.length === 0) {
+                    this.showMessage('Need at least one ingredient!', 'warning');
+                    return;
+                }
+                
+                let sortedPattern = [currentPattern[0], ...ingredients];
+                while(sortedPattern.length < 4) sortedPattern.push(null);
+
+                const matchedRecipe = Object.values(this.state.recipes).find(r => {
+                    let recipeIngredients = r.pattern.slice(1).filter(i => i !== null).sort();
+                    let inputIngredients = sortedPattern.slice(1).filter(i => i !== null).sort();
+                    if(r.pattern[0] !== sortedPattern[0]) return false;
+                    return JSON.stringify(recipeIngredients) === JSON.stringify(inputIngredients);
+                });
+
+                if (matchedRecipe) {
+                    this.processBrew(matchedRecipe);
+                } else {
+                    this.showMessage("That combination doesn't make anything!", 'error');
+                }
+            },
+            
+            processBrew(recipe) {
+                if (!recipe) {
+                    this.showMessage("Invalid recipe!", 'error');
+                    return;
+                }
+
+                let duration;
+                let animAmount;
+                let soundToPlay = null; // MODIFIED: Determine which sound to play
+
+                if (recipe.final) {
+                    duration = 4;
+                    this.dom.brewButton.classList.add('final-brew-glow');
+                } else {
+                    const equipmentKey = recipe.pattern[0];
+                    const equipmentData = this.state.equipment[equipmentKey];
+                    if (!equipmentData || !equipmentData.unlocked) {
+                        this.showMessage("Equipment not available!", 'error');
+                        return;
+                    }
+                    duration = equipmentData.baseTime * Math.pow(0.85, equipmentData.level - 1);
+                    soundToPlay = equipmentKey; // MODIFIED: Set the sound
+                    
+                    const animType = equipmentData.anim;
+                    animAmount = recipe.ingredients[Object.keys(recipe.ingredients)[0]];
+
+                    if (animType === 'weighing') this.animateWeighing(animAmount, duration);
+                    else if (animType === 'pouring') this.animatePouring(recipe.creates, animAmount, duration);
+                }
+
+                let tempInventory = JSON.parse(JSON.stringify(this.state.inventory));
+                let tempPrepInventory = JSON.parse(JSON.stringify(this.state.prepInventory));
+                const ingredientsToConsume = recipe.ingredients;
+                
+                for (const ingredient in ingredientsToConsume) {
+                    const amount = ingredientsToConsume[ingredient];
+                    if (tempPrepInventory[ingredient] >= amount) {
+                        // This space is intentionally left blank.
+                    } else if (tempInventory[ingredient] >= amount) {
+                         // This space is intentionally left blank.
+                    } else {
+                        this.showMessage(`Not enough ${ingredient.replace(/-/g, ' ')}!`, 'warning');
+                        return;
+                    }
+                }
+
+                 for (const ingredient in ingredientsToConsume) {
+                    const amount = ingredientsToConsume[ingredient];
+                    if (tempPrepInventory[ingredient] && tempPrepInventory[ingredient] >= amount) {
+                        tempPrepInventory[ingredient] -= amount;
+                    } else if (tempInventory[ingredient] && tempInventory[ingredient] >= amount) {
+                        tempInventory[ingredient] -= amount;
+                    }
+                }
+                
+                this.state.inventory = tempInventory;
+                this.state.prepInventory = tempPrepInventory;
+
+                this.dom.brewButton.disabled = true;
+
+                // MODIFIED: Pass the sound to the timer
+                this.startTimer('brew', duration, () => {
+                    if (recipe.final) {
+                         this.completeOrder(true, recipe.name);
+                         this.dom.brewButton.classList.remove('final-brew-glow');
+                         this.playSound('finalBrew'); // NEW: Play final brew sound
+                    } else {
+                        this.state.brewResult = recipe.creates;
+                        this.dom.resultSlot.classList.add('result-glow');
+                        setTimeout(() => { if (this.dom.resultSlot) this.dom.resultSlot.classList.remove('result-glow') }, 1500);
+                        this.showMessage(`You made ${recipe.name}!`, 'success');
+                        this.playSound('success');
+                    }
+                    this.resetPrepAnimations();
+                    this.state.craftingGrid = [null, null, null, null];
+                    this.dom.brewButton.disabled = false;
+                    this.renderAll();
+                }, soundToPlay);
+                
+                this.renderAll();
+            },
+
+            completeOrder(success, finalDrinkName) {
+                const customer = this.state.currentCustomer;
+                if (!customer) {
+                    if(finalDrinkName) {
+                        this.showMessage(`You made a ${finalDrinkName}, but there's no customer!`, 'info');
+                    }
+                    this.state.craftingGrid = [null, null, null, null];
+                    this.renderAll();
+                    return;
+                };
+
+                if (finalDrinkName && customer.order.key !== finalDrinkName.toLowerCase().replace(/ /g, '-')) {
+                    success = false;
+                    this.showMessage("That's not what the customer ordered!", 'error');
+                }
+                
+                let tip = 0;
+                if(success) {
+                    const price = this.state.recipes[customer.order.key].price;
+                    this.state.money += price;
+                    this.state.achievements.moneyEarned += price;
+                    this.state.achievements.cupsServed++;
+                    this.state.reputation = Math.min(5, this.state.reputation + 0.3);
+                    this.state.customersServedToday++;
+                    this.playSound('cash');
+
+                    if (Math.random() < 0.3) {
+                        const [min, max] = customer.type.tipMultiplier;
+                        const tipMultiplier = min + Math.random() * (max - min);
+                        tip = price * tipMultiplier;
+                        this.state.money += tip;
+                        this.state.achievements.tipsEarned += tip;
+                        this.showMessage(`You received a generous tip of $${tip.toFixed(2)}!`, 'success');
+                    }
+                } else {
+                     this.state.reputation = Math.max(0.1, this.state.reputation - 0.5);
+                     this.playSound('fail');
+                }
+                
+                this.state.craftingGrid = [null, null, null, null];
+                this.state.totalLiquidInCup = 0;
+                this.renderAll();
+                this.customerLeaves(success, tip);
+            },
+
+            // --- Customer and Day Management ---
+            generateCustomer() {
+                if (!this.state.gameActive || this.state.currentCustomer || this.state.customersServedToday >= this.state.maxCustomersPerDay) return;
+
+                const rand = Math.random();
+                let customerKey = null;
+
+                const mysteryKeys = Object.keys(this.state.mysteryCustomerRates);
+                let cumulativeProb = 0;
+
+                for(const key of mysteryKeys) {
+                    cumulativeProb += this.state.mysteryCustomerRates[key].current;
+                    if (rand < cumulativeProb) {
+                        customerKey = key;
+                        break;
+                    }
+                }
+
+                if (!customerKey) {
+                    const regularCustomers = Object.keys(this.state.customerTypes).filter(k => !mysteryKeys.includes(k));
+                    customerKey = regularCustomers[Math.floor(Math.random() * regularCustomers.length)];
+                }
+
+                if(this.state.customerTypes[customerKey].discovered === false) {
+                    this.state.customerTypes[customerKey].discovered = true;
+                    this.showMessage(`A new customer type discovered: The ${this.state.customerTypes[customerKey].name}!`, 'info');
+                    this.renderCustomerGuide();
+                }
+
+                if (this.state.mysteryCustomerRates[customerKey]) {
+                    const rate = this.state.mysteryCustomerRates[customerKey];
+                    rate.current = Math.min(rate.cap, rate.current + rate.increment);
+                }
+                
+                const customerType = this.state.customerTypes[customerKey];
+                
+                const availableDrinks = Object.keys(this.state.recipes).filter(key => {
+                    const recipe = this.state.recipes[key];
+                    if (!recipe.final) return false;
+
+                    return Object.keys(recipe.ingredients).every(ingredientKey => {
+                        if (this.state.inventory.hasOwnProperty(ingredientKey)) return true;
+                        
+                        const intermediateRecipe = Object.values(this.state.recipes).find(r => r.creates === ingredientKey);
+                        if (intermediateRecipe) {
+                            const requiredEquipment = intermediateRecipe.pattern[0];
+                            return this.state.equipment[requiredEquipment]?.unlocked;
+                        }
+                        return false;
+                    });
+                });
+
+                if (availableDrinks.length === 0) return;
+
+                const orderKey = availableDrinks[Math.floor(Math.random() * availableDrinks.length)];
+                
+                this.serveNextCustomer({ type: customerType, order: { key: orderKey } });
+            },
+            
+            serveNextCustomer(customer) {
+                if (this.state.currentCustomer) return;
+
+                const orderKey = customer.order.key;
+                const recipe = this.state.recipes[orderKey];
+                const maxAffordablePrice = recipe.basePrice * customer.type.priceSensitivity;
+
+                const customerEl = document.createElement('div');
+                customerEl.className = 'customer customer-enter';
+                this.dom.customerArea.appendChild(customerEl);
+                
+                setTimeout(() => {
+                    customerEl.classList.remove('customer-enter');
+                    customerEl.classList.add('show-bubble');
+                }, 100);
+
+                if (recipe.price > maxAffordablePrice) {
+                    customerEl.innerHTML = customer.type.svg + `<div class="order-bubble angry">That's too expensive!</div>`;
+                    this.state.reputation = Math.max(0.1, this.state.reputation - 0.1);
+                    setTimeout(() => {
+                        customerEl.classList.add('customer-leave');
+                        setTimeout(() => customerEl.remove(), 500);
+                    }, 2000);
+                    this.playSound('fail');
+                    this.updateAllUI();
+                    return;
+                }
+                
+                this.state.currentCustomer = customer;
+                customerEl.innerHTML = customer.type.svg + `<div class="order-bubble">${recipe.name}, please!</div>`;
+                this.state.currentCustomer.el = customerEl;
+                
+                this.renderOrder();
+            },
+            
+            customerLeaves(served, tip = 0) {
+                if (!this.state.currentCustomer) return;
+                const customer = this.state.currentCustomer;
+                customer.el.classList.add('customer-leave');
+                
+                if (served) this.showFloatingMoney(customer.el, this.state.recipes[customer.order.key].price, tip);
+
+                this.state.currentCustomer = null;
+
+                setTimeout(() => {
+                    if (customer.el.parentNode) {
+                        customer.el.remove();
+                    }
+                    this.renderOrder();
+                    this.renderAll();
+                }, 1000);
+            },
+            
+            startNextDay() {
+                this.state.day++;
+                this.state.customersServedToday = 0;
+                this.state.money -= this.state.dailyCosts;
+                this.dom.nextDayButton.style.display = 'none';
+                this.showMessage(`Day ${this.state.day} begins!`, 'info');
+                this.generateCustomer();
+                this.renderAll();
+            },
+            
+            updateRestockTotal() {
+                let total = 0;
+                this.dom.inventoryGrid.querySelectorAll('.restock-quantity').forEach(input => {
+                    const key = input.dataset.itemKey;
+                    const quantity = parseInt(input.value, 10) || 0;
+                    if (quantity > 0) {
+                        total += this.state.restockOptions[key].cost * quantity;
+                    }
+                });
+                this.dom.restockTotal.textContent = total.toFixed(2);
+            },
+
+            purchaseSupplies() {
+                let totalCost = 0;
+                const itemsToBuy = {};
+                this.dom.inventoryGrid.querySelectorAll('.restock-quantity').forEach(input => {
+                    const key = input.dataset.itemKey;
+                    const quantity = parseInt(input.value, 10) || 0;
+                    if (quantity > 0) {
+                        totalCost += this.state.restockOptions[key].cost * quantity;
+                        itemsToBuy[key] = quantity;
+                    }
+                });
+
+                if (totalCost <= 0) {
+                    this.showMessage('Select items to purchase first.', 'warning');
+                    if (this.dom.purchaseButton) this.dom.purchaseButton.disabled = false;
+                    return;
+                }
+
+                if (this.state.money >= totalCost) {
+                    this.state.money -= totalCost;
+                    for (const key in itemsToBuy) {
+                        const amountToAdd = this.state.restockOptions[key].amount * itemsToBuy[key];
+                        this.state.inventory[key] += amountToAdd;
+                    }
+                    this.showMessage('Supplies purchased successfully!', 'success');
+                    this.renderInventory();
+                    this.renderAll();
+                } else {
+                    this.showMessage('Not enough money to purchase these supplies.', 'error');
+                }
+                if (this.dom.purchaseButton) this.dom.purchaseButton.disabled = false;
+            },
+
+
+             unlockEquipment(key) {
+                const eq = this.state.equipment[key];
+                if (!eq || eq.unlocked) return;
+                const cost = eq.unlockCost;
+                if (this.state.money >= cost) {
+                    this.state.money -= cost;
+                    eq.unlocked = true;
+                    eq.level = 1;
+                    this.showMessage(`${key.replace(/-/g, ' ')} unlocked!`, 'success');
+                    this.renderAll();
+                } else {
+                    this.showMessage('Not enough money to unlock.', 'error');
+                    this.renderUpgrades();
+                }
+            },
+
+            upgradeEquipment(key) {
+                const eq = this.state.equipment[key];
+                const cost = eq.level * 100;
+                if(this.state.money >= cost) {
+                    this.state.money -= cost;
+                    eq.level++;
+                    this.showMessage(`${key.replace(/-/g,' ')} upgraded to level ${eq.level}!`, 'success');
+                    this.renderAll();
+                } else {
+                    this.showMessage(`Not enough money to upgrade.`, 'error');
+                    this.renderUpgrades();
+                }
+            },
+            
+            // --- System & UI ---
+            toggleSound() {
+                this.state.soundEnabled = !this.state.soundEnabled;
+                this.playSound('click');
+                this.updateAllUI();
+                this.showMessage(`Sound Effects ${this.state.soundEnabled ? 'Enabled' : 'Disabled'}`, 'info');
+            },
+
+            toggleMusic() {
+                this.state.musicEnabled = !this.state.musicEnabled;
+                this.playSound('click');
+                if (this.state.musicEnabled) {
+                    this.startMusic();
+                } else {
+                    this.stopMusic();
+                }
+                this.updateAllUI();
+                this.showMessage(`Music ${this.state.musicEnabled ? 'Enabled' : 'Disabled'}`, 'info');
+            },
+
+            toggleAmbience() {
+                this.playSound('click');
+                this.state.ambientEnabled = !this.state.ambientEnabled;
+                
+                if (this.state.ambientEnabled) {
+                    this.startAmbience();
+                    this.showMessage(`Cafe Ambience Enabled`, 'success');
+                } else {
+                    this.stopAmbience();
+                    this.showMessage(`Cafe Ambience Disabled`, 'info');
+                }
+                this.updateAllUI();
+            },
+
+            startMusic() {
+                if (this.state.musicEnabled && this.toneStarted) {
+                    Tone.Transport.start();
+                }
+            },
+
+            stopMusic() {
+                Tone.Transport.stop();
+            },
+
+            startAmbience() {
+                if (this.state.ambientEnabled && this.toneStarted) {
+                    // Ramp up to a reasonable volume level
+                    this.sounds.ambientBus.gain.rampTo(0.8, 1); // Increased from 0.7 to 0.8
+                    console.log("Ambience started");
+                }
+            },
+
+            stopAmbience() {
+                if (this.toneStarted) {
+                    this.sounds.ambientBus.gain.rampTo(0, 1);
+                    console.log("Ambience stopped");
+                }
+            },
+
+            validateGameState() {
+                if (this.state.money < 0) {
+                    this.state.money = 0;
+                    this.showMessage('Bankruptcy avoided!', 'warning');
+                }
+                
+                this.state.reputation = Math.max(0.1, Math.min(5, this.state.reputation));
+                
+                Object.keys(this.state.inventory).forEach(key => {
+                    if (this.state.inventory[key] < 0) {
+                        this.state.inventory[key] = 0;
+                    }
+                });
+                
+                Object.keys(this.state.prepInventory).forEach(key => {
+                    if (this.state.prepInventory[key] <= 0) {
+                        delete this.state.prepInventory[key];
+                    }
+                });
+            },
+
+            saveGame() {
+                try {
+                    const stateToSave = JSON.parse(JSON.stringify(this.state));
+                    stateToSave.currentCustomer = null; 
+                    localStorage.setItem('coffeeTycoonSave_v10', JSON.stringify(stateToSave));
+                    this.showMessage('Game saved!', 'success');
+                } catch(e) { console.error("Failed to save game:", e); this.showMessage('Could not save game.', 'error'); }
+            },
+
+            loadGame() {
+                const saved = localStorage.getItem('coffeeTycoonSave_v10');
+                if (saved) {
+                    try {
+                        const loadedState = JSON.parse(saved);
+                        
+                        Object.keys(this.state.timers).forEach(key => {
+                            if (this.state.timers[key].interval) clearInterval(this.state.timers[key].interval);
+                        });
+
+                        Object.assign(this.state, this.getInitialState(), loadedState); 
+                        
+                        this.showMessage('Game loaded!', 'success');
+                        this.renderAll();
+                        this.renderCustomerGuide();
+
+                         if (!this.state.currentCustomer && this.state.customersServedToday < this.state.maxCustomersPerDay) {
+                            this.startCustomerGeneration();
+                        }
+                        return true;
+                    } catch(e) { console.error("Failed to load game:", e); this.showMessage('Could not load save file.', 'error'); return false; }
+                }
+                return false;
+            },
+
+            // Add this method to check audio status
+            checkAudioStatus() {
+                console.log("Audio Status:", {
+                    toneStarted: this.toneStarted,
+                    soundEnabled: this.state.soundEnabled,
+                    ambientEnabled: this.state.ambientEnabled,
+                    musicEnabled: this.state.musicEnabled,
+                    ambientBusGain: this.sounds.ambientBus?.gain.value
+                });
+            },
+
+            // --- Animations ---
+            animateWeighing(amount, duration) {
+                this.dom.weighingScale.classList.add('visible');
+                let currentWeight = 0;
+                const interval = 50, steps = (duration * 1000) / interval, increment = amount / steps;
+
+                const timer = setInterval(() => {
+                    currentWeight += increment;
+                    if (currentWeight >= amount) {
+                        currentWeight = amount;
+                        clearInterval(timer);
+                    }
+                    this.dom.scaleDisplay.textContent = `${Math.round(currentWeight)}g`;
+                    const fillPercent = (currentWeight / (amount * 1.5)) * 100;
+                    this.dom.coffeeGrounds.style.width = `${fillPercent}%`;
+                    this.dom.coffeeGrounds.style.height = `${fillPercent}%`;
+                }, interval);
+            },
+            animatePouring(createdItem, amount, duration) {
+                this.dom.prepCup.classList.add('visible');
+                const liquidEl = this.dom.cupLiquid;
+                const totalCapacity = 350;
+
+                let liquidClass = 'espresso'; // Default for coffee/espresso
+                if (createdItem.includes('milk')) {
+                    liquidClass = 'milk';
+                } else if (createdItem.includes('syrup')) {
+                    liquidClass = 'syrup';
+                } else if (createdItem.includes('water')) {
+                    liquidClass = 'water';
+                }
+
+                if (createdItem.includes('espresso') || createdItem.includes('coffee') || createdItem.includes('steamed-milk') || createdItem.includes('foamed-milk')) {
+                    this.dom.steamContainer.classList.add('visible');
+                }
+                
+                liquidEl.classList.add(liquidClass);
+
+                this.state.totalLiquidInCup += amount;
+                const endingFill = Math.min(100, (this.state.totalLiquidInCup / totalCapacity) * 100);
+                
+                liquidEl.style.transition = `height ${duration}s linear`;
+                liquidEl.style.height = `${endingFill}%`;
+
+                this.animationTimeout = setTimeout(() => liquidEl.classList.remove(liquidClass), duration * 1000 + 100);
+            },
+            resetPrepAnimations() {
+                this.dom.weighingScale.classList.remove('visible');
+                this.dom.prepBowl.classList.remove('visible');
+                this.dom.prepCup.classList.remove('visible');
+                this.dom.steamContainer.classList.remove('visible');
+                this.dom.coffeeGrounds.style.width = '0%';
+                this.dom.coffeeGrounds.style.height = '0%';
+                this.dom.cupLiquid.style.transition = 'height 0.1s';
+                this.dom.cupLiquid.style.height = '0%';
+                this.dom.scaleDisplay.textContent = '0g';
+                
+                this.dom.cupLiquid.className = 'liquid';
+                
+                clearTimeout(this.animationTimeout);
+            },
+             showFloatingMoney(targetEl, amount, tip = 0) {
+                const rect = targetEl.getBoundingClientRect();
+                const moneyEl = document.createElement('div');
+                moneyEl.className = 'floating-money';
+                moneyEl.textContent = `+$${amount.toFixed(2)}`;
+                document.body.appendChild(moneyEl);
+                moneyEl.style.left = `${rect.left + rect.width / 2}px`;
+                moneyEl.style.top = `${rect.top}px`;
+                setTimeout(() => moneyEl.remove(), 1500);
+
+                if (tip > 0) {
+                    const tipEl = document.createElement('div');
+                    tipEl.className = 'floating-money';
+                    tipEl.textContent = `+$${tip.toFixed(2)} (Tip!)`;
+                    tipEl.style.color = 'var(--accent-color)'; // Make it stand out
+                    tipEl.style.fontSize = '1.2rem';
+                    document.body.appendChild(tipEl);
+                    tipEl.style.left = `${rect.left + rect.width / 2}px`;
+                    tipEl.style.top = `${rect.top - 30}px`; // Position it above the main amount
+                    tipEl.style.animationDelay = '0.2s';
+                    setTimeout(() => tipEl.remove(), 1700);
+                }
+            },
+
+            showMessage(text, type = 'info') {
+                const msgEl = document.createElement('div');
+                msgEl.className = `message ${type}`;
+                let icon = 'info-circle';
+                if(type === 'success') icon = 'check-circle';
+                if(type === 'warning') icon = 'exclamation-triangle';
+                if(type === 'error') icon = 'times-circle';
+                msgEl.innerHTML = `<i class="fas fa-${icon}"></i> <p>${text}</p>`;
+                this.dom.messageContainer.appendChild(msgEl);
+                setTimeout(() => msgEl.remove(), 4500);
+            }
+        };
+
+        game.init();
+        
+        let audioStarted = false;
+        document.body.addEventListener('click', () => {
+            if (!audioStarted) {
+                game.startAudio();
+                audioStarted = true;
+            }
+        }, { once: false });
+    });
+    </script>
+</body>
+</html>
+
