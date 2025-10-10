@@ -1198,8 +1198,11 @@
                 this.sounds.ambientBus = new Tone.Gain(0);
                 const ambienceFilter = new Tone.Filter(3000, "lowpass");
                 
-                this.sounds.ambientBus.chain(ambienceFilter, masterLimiter);
+                // --- FIX START: Corrected audio routing for ambient sound ---
+                // The original code used two .chain() calls, which overwrites the first one.
+                // This creates a single, predictable audio path for all ambient sounds.
                 this.sounds.ambientBus.chain(ambienceFilter, reverb);
+                // --- FIX END ---
 
                 // 1. Base Room Tone - Kept low
                 const roomTone = new Tone.Noise('brown').set({ 
@@ -2017,7 +2020,25 @@
                     soundToPlay = equipmentKey; // MODIFIED: Set the sound
                     
                     const animType = equipmentData.anim;
-                    animAmount = recipe.ingredients[Object.keys(recipe.ingredients)[0]];
+                    
+                    // --- FIX START: Correctly calculate amount for weighing and pouring animations ---
+                    const ingredientKeys = Object.keys(recipe.ingredients);
+                    animAmount = 0;
+
+                    if (animType === 'weighing') {
+                        // For weighing, find the solid ingredient amount (e.g., coffee-beans)
+                        const solidIngredientKey = ingredientKeys.find(key => key === 'coffee-beans');
+                        if (solidIngredientKey) {
+                            animAmount = recipe.ingredients[solidIngredientKey];
+                        }
+                    } else if (animType === 'pouring') {
+                        // For pouring, find the liquid ingredient amount
+                        const liquidIngredientKey = ingredientKeys.find(key => ['water', 'milk', 'syrup'].includes(key));
+                        if (liquidIngredientKey) {
+                            animAmount = recipe.ingredients[liquidIngredientKey];
+                        }
+                    }
+                    // --- FIX END ---
 
                     if (animType === 'weighing') this.animateWeighing(animAmount, duration);
                     else if (animType === 'pouring') this.animatePouring(recipe.creates, animAmount, duration);
@@ -2499,6 +2520,7 @@
                 this.dom.cupLiquid.style.transition = 'height 0.1s';
                 this.dom.cupLiquid.style.height = '0%';
                 this.dom.scaleDisplay.textContent = '0g';
+                this.state.totalLiquidInCup = 0; // FIX: Reset the liquid amount in the animation cup
                 
                 this.dom.cupLiquid.className = 'liquid';
                 
