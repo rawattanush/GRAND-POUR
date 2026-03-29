@@ -3,6 +3,7 @@
 A browser-based coffee shop simulation game focused on real-time interaction, dynamic UI, and state-driven gameplay.
 
 Live Demo: https://grand-pour.vercel.app/
+
 Repository: https://github.com/rawattanush/GRAND-POUR
 
 ---
