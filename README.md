@@ -1,32 +1,33 @@
 # The Grand Pour
 
-A browser-based coffee shop simulation game focused on real-time interaction, dynamic UI, and state-driven gameplay.
+![Game Preview](./assets/banner.png)
+
+A browser-based coffee shop simulation game demonstrating interactive UI design, real-time state management, and user-driven workflows.
 
 Live Demo: https://grand-pour.vercel.app/
-
 Repository: https://github.com/rawattanush/GRAND-POUR
 
 ---
 
 ## Overview
 
-The Grand Pour is a simulation game where the player manages a coffee shop. The player prepares drinks, handles customer orders, manages inventory, and progresses through a day-based system.
+The Grand Pour is a simulation game where the user operates a virtual coffee shop. The gameplay involves preparing beverages, serving customers, managing inventory, and progressing through a day-based system.
 
-The project was built using a rapid prototyping approach, prioritizing functionality and interaction over initial structure. It was later refactored into separate files for better maintainability.
+The project was initially developed using a rapid prototyping approach and later refactored into separate files to improve structure and maintainability.
 
 ---
 
-## Features
+## Key Features
 
-* Interactive coffee brewing system
-* Multi-step recipes (espresso, latte, cappuccino, etc.)
-* Customer system with patience and behavior differences
+* Interactive brewing system with drag-and-drop mechanics
+* Multi-step beverage preparation (espresso, latte, cappuccino, etc.)
+* Dynamic customer system with varying patience and behavior
 * Inventory and resource management
-* Equipment and upgrade system
-* Reputation and progression mechanics
+* Equipment unlocking and progression system
+* Reputation-based progression
 * Real-time UI updates using DOM manipulation
-* Sound and ambient effects using Tone.js
-* Save and load functionality using localStorage
+* Audio integration using Tone.js for ambient and interaction feedback
+* Persistent game state using browser localStorage
 
 ---
 
@@ -43,56 +44,50 @@ The project was built using a rapid prototyping approach, prioritizing functiona
 
 ## Project Structure
 
-```
+```id="m4rk8p"
 GRAND-POUR/
 │── index.html
 │── styles.css
 │── script.js
+│── assets/
+│   └── banner.png
 ```
 
-The project was initially implemented in a single HTML file and later separated into individual files for better organization.
+The project was originally implemented as a single-file application and later modularized into separate files for improved organization.
 
 ---
 
-## Architecture (High Level)
+## Architecture Overview
 
-The application is built around a central game object that manages:
+The application follows a centralized, state-driven design:
 
-* State (money, inventory, customers, progression)
-* Game logic (brewing, crafting, upgrades)
-* UI updates (DOM rendering and animations)
+* A core game object manages application state (money, inventory, customers, progression)
+* Game logic handles brewing, crafting, and progression systems
+* UI updates are performed through direct DOM manipulation and event-driven interactions
 
-The UI is updated dynamically through event-driven interactions and direct DOM manipulation.
+This approach enables real-time updates while maintaining consistency between state and interface.
 
 ---
 
-## Key Concepts
+## Persistence
+
+Game progress is stored using browser localStorage and is automatically restored on reload.
+No backend or external database is required.
+
+---
+
+## Core Concepts Demonstrated
 
 * State management in vanilla JavaScript
 * Event-driven programming
-* DOM manipulation at scale
-* Game loop and timers
-* Local storage for persistence
-* Incremental system design
+* Complex DOM manipulation and UI synchronization
+* Asynchronous behavior and timers
+* Client-side persistence
 
 ---
 
-## Limitations
+## Notes
 
-The project was developed using an experimental approach, so:
-
-* Code structure is not fully modular
-* Logic and UI are partially coupled
-* Some sections are difficult to maintain or extend
-
----
-
-## Future Improvements
-
-* Refactor into modular architecture (separate logic, UI, data)
-* Improve maintainability and readability
-* Add more gameplay depth (new recipes, customer types)
-* Optimize performance
-* Possibly migrate to a framework or game engine
+The project was developed using a rapid prototyping approach and later refactored for better structure. Some components can be further modularized to improve scalability and maintainability.
 
 ---
