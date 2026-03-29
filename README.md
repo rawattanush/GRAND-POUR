@@ -1,10 +1,11 @@
 # The Grand Pour
 
-![Game Preview](./assets/banner.png)
+![Gameplay Preview](./assets/gameplay.gif)
 
 A browser-based coffee shop simulation game demonstrating interactive UI design, real-time state management, and user-driven workflows.
 
 Live Demo: https://grand-pour.vercel.app/
+
 Repository: https://github.com/rawattanush/GRAND-POUR
 
 ---
@@ -44,13 +45,13 @@ The project was initially developed using a rapid prototyping approach and later
 
 ## Project Structure
 
-```id="m4rk8p"
+```
 GRAND-POUR/
 │── index.html
 │── styles.css
 │── script.js
 │── assets/
-│   └── banner.png
+│   └── gameplay.gif
 ```
 
 The project was originally implemented as a single-file application and later modularized into separate files for improved organization.
