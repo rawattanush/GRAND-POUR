@@ -1,0 +1,829 @@
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&display=swap');
+
+        :root {
+            --bg-color: #3e2723;
+            --surface-color: #f4f1ea;
+            --primary-color: #8b4513;
+            --primary-dark: #5a2d0c;
+            --secondary-color: #c89f7f;
+            --accent-color: #d4af37;
+            --text-dark: #3d3532;
+            --text-light: #f4f1ea;
+            --success-color: #4CAF50;
+            --error-color: #f44336;
+            --font-main: 'Roboto', sans-serif;
+            --font-display: 'Playfair Display', serif;
+        }
+
+        /* --- General Reset & Setup --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='%233a2c26' fill-opacity='0.4'%3E%3Crect x='0' y='0' width='100' height='1'/%3E%3Crect x='0' y='0' width='1' height='100'/%3E%3C/g%3E%3C/svg%3E");
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* --- Game Container --- */
+        .game-container {
+            width: 100%;
+            max-width: 1600px; /* Increased max-width */
+            height: 95vh;
+            max-height: 950px;
+            background: var(--surface-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 2px var(--secondary-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            background: linear-gradient(to right, #3d3532, var(--bg-color));
+            color: var(--text-light);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid var(--accent-color);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-controls { display: flex; align-items: center; gap: 1rem; }
+        .stats-bar { display: flex; gap: 1.5rem; }
+        .stat { text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: 500; color: var(--accent-color); }
+        .stat-label { font-size: 0.8rem; opacity: 0.8; }
+        .header-btn { background: none; border: 2px solid var(--secondary-color); color: var(--text-light); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; transition: all 0.2s; font-size: 1rem;}
+        .header-btn:hover { background: var(--secondary-color); color: var(--primary-dark); }
+
+        /* --- Main Content Area --- */
+        .main-game {
+            flex-grow: 1;
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            overflow: hidden;
+        }
+
+        /* --- Shop View (Top Part) --- */
+        .shop-view {
+            background: linear-gradient(to top, #d3c4b2, #e8d5c4);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 320px;
+        }
+        
+        .shop-flex-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 100%;
+            position: relative;
+            z-index: 3;
+        }
+
+        #prepArea {
+            flex-grow: 1;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .prep-station-container {
+             position: absolute;
+             bottom: 120px;
+             left: 50%;
+             transform: translateX(-50%);
+             width: 750px;
+             height: 250px;
+             perspective: 1000px;
+        }
+
+        .prep-station {
+            width: 100%;
+            height: 80px;
+            background: #a0522d;
+            border: 5px solid #6b3a1a;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 0;
+            transform: rotateX(40deg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        #craftingGrid {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: flex-end;
+            gap: 1.5rem;
+        }
+        .crafting-input-area {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+        }
+        .slot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .slot-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--primary-dark);
+        }
+
+        .crafting-slot {
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.1);
+            border: 3px dashed rgba(0,0,0,0.2);
+            border-radius: 10px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .crafting-slot.droppable {
+            border-color: var(--accent-color);
+            background: rgba(212, 175, 55, 0.2);
+        }
+        #equipmentCraftSlot {
+            border-style: solid;
+            border-color: #6b3a1a;
+        }
+        #resultSlot {
+            cursor: pointer;
+            border-color: var(--success-color);
+        }
+        
+        .crafting-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #brewButton {
+            width: 90px;
+            height: 45px;
+            margin: 0;
+            position: relative;
+        }
+        .brewing-arrow {
+            font-size: 2rem;
+            color: var(--primary-dark);
+        }
+        
+        #brewingTimerDisplay {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-light);
+            background: rgba(0,0,0,0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            min-width: 60px;
+            text-align: center;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+
+        /* Preparation Animations Area */
+        #animationArea {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 2rem;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        .weighing-scale { opacity: 0; transition: opacity 0.3s; }
+        .weighing-scale.visible { opacity: 1; }
+        .scale-base { width: 80px; height: 10px; background: #ccc; border-radius: 2px; }
+        .scale-plate { width: 70px; height: 5px; background: #eee; border-radius: 2px; position: absolute; bottom: 10px; left: 5px; }
+        .scale-display { position: absolute; bottom: 15px; left: 5px; background: #333; color: #7FFF00; font-family: monospace; font-size: 12px; padding: 2px 4px; border-radius: 2px; }
+        
+        .prep-bowl {
+            width: 60px; height: 30px; background: #fff; border: 2px solid #ccc; border-radius: 50% 50% 10px 10px / 100% 100% 20px 20px;
+            opacity: 0; transition: opacity 0.3s; position: relative;
+        }
+        .prep-bowl.visible { opacity: 1; }
+        .coffee-grounds { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0%; height: 0%; background: #654321; border-radius: 50%; transition: width 0.5s, height 0.5s; }
+
+        .prep-cup {
+            width: 70px; height: 80px; background: #f8f8f8; border: 3px solid #ddd; border-radius: 5px 5px 20px 20px;
+            opacity: 0; transition: opacity 0.3s; overflow: hidden; position: relative;
+        }
+        .prep-cup.visible { opacity: 1; }
+        .liquid { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; transition: height 1s, background-color: 0.5s; }
+        .liquid.water { background: #aaddff; }
+        .liquid.milk { background: #fffdd0; }
+        .liquid.espresso { background: #3b2f2f; }
+        .liquid.syrup { background: #c27a38; }
+
+        /* Steam animation for hot drinks */
+        .steam-container {
+            position: absolute;
+            top: -40px; /* Position above the cup */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 40px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .steam-container.visible {
+            opacity: 0.7;
+        }
+        .steam-particle {
+            position: absolute;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: steamRise 2.1s infinite ease-out;
+        }
+        @keyframes steamRise {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-40px) scale(0.3); opacity: 0; }
+        }
+
+        #craftingGrid .result-glow {
+            animation: resultGlow 1.5s ease-out;
+        }
+        @keyframes resultGlow {
+            0%, 100% { box-shadow: inset 0 0 5px rgba(212, 175, 55, 0.7); border-color: var(--success-color); }
+            50% { box-shadow: inset 0 0 15px rgba(212, 175, 55, 1), 0 0 15px rgba(212, 175, 55, 1); border-color: var(--accent-color); }
+        }
+
+        #brewButton.final-brew-glow {
+            animation: finalGlow 0.8s infinite alternate ease-in-out;
+        }
+        @keyframes finalGlow {
+            from { box-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px var(--accent-color); transform: scale(1); }
+            to { box-shadow: 0 0 10px #fff, 0 0 20px var(--accent-color), 0 0 30px var(--accent-color); transform: scale(1.05); }
+        }
+
+        #customerArea {
+            position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
+            width: 100%; display: flex; justify-content: center; align-items: flex-end;
+            gap: 2rem; z-index: 2; height: 300px; padding: 0 2rem; pointer-events: none;
+        }
+
+        .customer {
+            width: 120px; position: relative;
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        }
+        .customer.customer-enter { transform: translateY(100%); opacity: 0; }
+        .customer.customer-leave { transform: translateY(150%); opacity: 0; }
+        .customer-svg { width: 100%; height: auto; display: block; }
+        .order-bubble {
+            position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%);
+            background: white; padding: 0.8rem 1.2rem; border-radius: 20px 20px 20px 5px;
+            width: max-content; max-width: 200px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem; z-index: 10; border: 2px solid var(--primary-color);
+            opacity: 0; transform-origin: bottom center;
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .order-bubble.angry {
+            border-color: var(--error-color);
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(-50%); }
+            25% { transform: translateX(-55%); }
+            75% { transform: translateX(-45%); }
+        }
+        .customer.show-bubble .order-bubble { opacity: 1; transform: translateX(-50%) scale(1); }
+
+        #baristaArea {
+            position: relative; width: 150px;
+            align-self: flex-end; margin-left: 2rem;
+        }
+        .barista-svg { width: 100%; height: auto; animation: idleBob 3s ease-in-out infinite; }
+
+        @keyframes idleBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        #intermediateProductArea {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0,0,0,0.15);
+            padding: 1rem;
+            border-radius: 15px;
+            border: 2px solid var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-width: 170px;
+        }
+        .tray-title {
+            font-family: var(--font-display);
+            color: var(--text-dark);
+            text-align: center;
+            font-size: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--secondary-color);
+        }
+        #trayItems {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        .tray-item {
+            width: 60px; height: 60px;
+            background: var(--surface-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
+            padding: 5px;
+            cursor: grab;
+            position: relative;
+            transition: transform 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tray-item:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+        }
+        .tray-item .item-count {
+            position: absolute; bottom: -5px; right: -5px; background: var(--primary-color); color: var(--text-light);
+            border-radius: 50%; font-size: 0.8rem; width: 20px; height: 20px;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .tray-item:active { cursor: grabbing; }
+
+        #shelvesStation {
+            flex-basis: 280px; /* Further reduced */
+            flex-shrink: 0;
+            max-width: 280px; /* Further reduced */
+            overflow-y: hidden; 
+            background: rgba(0,0,0,0.1); border-left: 2px solid var(--secondary-color);
+            padding: 0.4rem; /* Further reduced */
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem; /* Further reduced */
+            margin-right: 0.4rem; /* Further reduced */
+            border-radius: 10px 10px 0 0;
+            align-self: stretch;
+        }
+        .station-shelf {
+            background: var(--surface-color); border-radius: 8px; 
+            padding: 0.4rem; /* Further reduced */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .shelf-title {
+            font-family: var(--font-display);
+            color: var(--primary-dark);
+            margin-bottom: 0.4rem; /* Further reduced */
+            border-bottom: 1px solid var(--secondary-color); 
+            padding-bottom: 0.25rem;
+            font-size: 0.9rem; /* Further reduced */
+        }
+        .shelf-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); /* Further reduced */
+            gap: 0.4rem; /* Further reduced */
+        }
+        
+        .shelf-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            height: auto;
+            cursor: pointer; transition: transform 0.2s, filter 0.2s, opacity 0.2s;
+            position: relative; background: #fff; padding: 5px; border-radius: 8px; border: 2px solid transparent;
+        }
+        .shelf-item:hover { transform: scale(1.1); }
+        .shelf-item.equipment.locked { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+        .shelf-item.equipment.locked::after { content: "🔒"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; color: var(--text-dark); }
+        .shelf-item.needed { border-color: var(--accent-color); box-shadow: 0 0 10px var(--accent-color); }
+        
+        .shelf-item-svg { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain;
+        }
+        .crafting-slot .shelf-item-svg {
+            padding: 10px;
+            pointer-events: none;
+        }
+
+        .shelf-item .item-count {
+            position: absolute; bottom: -5px; right: -5px; background: var(--primary-dark);
+            color: var(--text-light); border-radius: 10px; font-size: 0.8rem;
+            min-width: 20px; height: 20px; padding: 0 4px;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+
+        .shelf-item .shelf-item-tooltip {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 15;
+            bottom: 110%; 
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            pointer-events: none;
+            text-transform: capitalize;
+        }
+
+        .shelf-item:hover .shelf-item-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .shelf-item .shelf-item-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-dark) transparent transparent transparent;
+        }
+
+
+        .floating-money { position: absolute; z-index: 10; color: var(--success-color); font-weight: bold; font-size: 1.5rem; text-shadow: 1px 1px 0 white; animation: floatUp 1.5s ease-out forwards; }
+        @keyframes floatUp { to { transform: translateY(-80px); opacity: 0; } }
+        
+        .counter-area {
+            width: 100%; height: 120px; background: linear-gradient(to top, #6b3a1a, #8b4513);
+            border-top: 10px solid #5a2d0c; box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.3) inset;
+            position: absolute; bottom: 0; left: 0; z-index: 1;
+        }
+
+        /* --- Controls (Bottom Part) --- */
+        .controls-view {
+            background: #e0d6c9; border-top: 4px solid var(--secondary-color); padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* MODIFIED for better responsiveness */
+            gap: 1.5rem;
+            align-items: stretch; flex-shrink: 0; overflow: hidden;
+        }
+        .panel { background: var(--surface-color); border-radius: 12px; padding: 1rem; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); display: flex; flex-direction: column; max-height: 300px; }
+        .panel-title { font-family: var(--font-display); color: var(--primary-dark); margin-bottom: 1rem; border-bottom: 2px solid var(--secondary-color); padding-bottom: 0.5rem; font-size: 1.25rem; flex-shrink: 0; }
+        .panel-content { flex-grow: 1; overflow-y: auto; }
+        .menu-items { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .menu-item { background: #fff; padding: 0.75rem; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
+        .menu-item:hover { transform: translateY(-2px); box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .menu-item.active { border-color: var(--primary-color); background: #fffaf0; }
+        .item-name { font-weight: 500; font-size: 1rem; }
+        .item-price-container { font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem; }
+        .price-input { width: 60px; border: 1px solid #ccc; border-radius: 4px; margin-left: 5px; text-align: center; font-weight: bold; color: var(--primary-dark); }
+        #orderDisplay { text-align: center; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        #orderStatus { font-size: 1.1rem; font-weight: 500; margin-bottom: 1rem; min-height: 40px;}
+        #patienceMeterContainer { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
+        #patienceMeter { height: 100%; background: linear-gradient(to right, var(--error-color), orange, var(--success-color)); background-size: 200%; transition: background-position 0.3s, width 0.3s; border-radius: 5px; }
+        .action-button { 
+            background: linear-gradient(to bottom, var(--primary-color), var(--primary-dark)); 
+            color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 500; 
+            cursor: pointer; transition: all 0.2s; margin-top: 1rem; width: 100%; position: relative;
+            overflow: hidden;
+        }
+
+        .action-button span, .action-button::after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: clip-path var(--brew-duration, 0.4s) linear, color 0.2s;
+        }
+        
+        .action-button span {
+            z-index: 2;
+            color: white;
+            transition: color 0.1s linear;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: rgba(0,0,0,0.2);
+            z-index: 1;
+            transition: height var(--brew-duration, 0.4s) linear;
+        }
+
+        .action-button::after {
+            content: attr(data-text);
+            color: var(--accent-color);
+            background: transparent;
+            clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+            z-index: 3;
+        }
+        
+        .action-button.brewing span {
+            color: transparent;
+        }
+
+        .action-button.brewing::before {
+            height: 100%;
+        }
+
+        .action-button.brewing::after {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+        
+        .action-button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .action-button:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
+        
+        .timer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .details-tabs { display: flex; margin-bottom: 1rem; border-bottom: 1px solid #ddd; }
+        .tab { padding: 0.5rem 1rem; cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab.active { border-bottom-color: var(--primary-color); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .recipe-details { font-size: 0.9rem; }
+        .recipe-ingredients { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .ingredient-item, .brewing-item { display: flex; align-items: center; gap: 0.5rem; background: #e9e2d9; padding: 0.4rem 0.8rem; border-radius: 8px; width: 100%; }
+        .ingredient-icon, .brewing-icon { width: 24px; height: 24px; color: var(--primary-dark); }
+        .ingredient-name, .brewing-name { font-weight: 500; text-transform: capitalize;}
+        .achievements { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;}
+        
+        #inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 1rem;
+        }
+        .inventory-item-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 0.75rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .inventory-item-card .item-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 0.5rem;
+            color: var(--primary-dark);
+        }
+        .inventory-item-card .item-icon svg { width: 100%; height: 100%; }
+        .inventory-item-name { font-weight: 500; font-size: 0.9rem; }
+        .inventory-details {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-size: 0.8rem;
+            background: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin: 0.25rem 0;
+        }
+        .detail-price {
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        .detail-unit {
+            color: #555;
+            font-weight: 500;
+        }
+        .inventory-stock { font-size: 0.8rem; opacity: 0.7; margin: 0.25rem 0; }
+        .restock-item { margin-top: auto; }
+        .restock-item input { width: 100%; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 0.25rem; }
+
+        #restock-summary { margin-top: 1rem; font-weight: bold; text-align: right; }
+        
+        .upgrades .upgrade-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .upgrade-item button { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
+        .recipe-section { margin-bottom: 1.25rem; }
+        .recipe-section:last-child { margin-bottom: 0; }
+        .recipe-section-title { display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-display); color: var(--primary-dark); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--secondary-color); font-size: 1.1rem; }
+       
+        #messageContainer { position: fixed; top: 2rem; right: 2rem; z-index: 1000; display: flex; flex-direction: column; gap: 1rem; }
+        .message { padding: 1rem 1.5rem; border-radius: 8px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 1rem; opacity: 0; transform: translateX(100%); animation: slideIn 0.5s forwards, fadeOut 0.5s 4s forwards; }
+        .message.info { background: #2196F3; }
+        .message.success { background: var(--success-color); }
+        .message.warning { background: #FFC107; }
+        .message.error { background: #f44336; }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(100%);} }
+        
+        /* Guide Overlay */
+        .overlay-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.3s;
+            pointer-events: all;
+        }
+        .overlay-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .guide-modal {
+            background: var(--surface-color);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 900px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .guide-modal h2 {
+            font-family: var(--font-display);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
+        }
+        .close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+        .guide-content {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .guide-content h3 {
+            font-family: var(--font-display);
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .recipe-entry {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #e9e2d9;
+            padding: 0.75rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .recipe-item {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .recipe-symbol {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+
+        /* Customer Guide Styles */
+        .customer-guide-entry {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 1.5rem;
+            align-items: center;
+            background: #e9e2d9;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .customer-guide-avatar {
+            width: 100px;
+            height: 100px;
+            background: #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #555;
+            overflow: hidden;
+            border: 3px solid var(--secondary-color);
+        }
+        .customer-guide-avatar svg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.2);
+        }
+        .customer-guide-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .customer-guide-name {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+        }
+        .sensitivity-bar-container {
+            width: 100%;
+            max-width: 200px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            position: relative;
+        }
+        .sensitivity-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--success-color), var(--accent-color), var(--error-color));
+            border-radius: 10px;
+        }
+        .sensitivity-indicator {
+            position: absolute;
+            top: -5px;
+            width: 4px;
+            height: 30px;
+            background: var(--primary-dark);
+            border-radius: 2px;
+            transform: translateX(-50%);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) { .panel:first-child { grid-column: 1 / -1; } }
+        @media (max-height: 750px), (max-width: 900px) { body { padding: 0; align-items: flex-start;} .game-container { border-radius: 0; height: 100vh; max-height: none; } header { padding: 0.5rem 1rem; } h1 { font-size: 1.5rem; } .stats-bar { gap: 1rem; } .stat-value { font-size: 1rem; } .main-game { grid-template-rows: 1fr auto; } .shop-view { min-height: 280px; } .controls-view { grid-template-columns: 1fr; padding: 0.5rem; gap: 0.5rem; overflow-y: auto; } .panel { max-height: none; } }
