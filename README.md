@@ -1,4 +1,4 @@
-# The Grand Pour
+# The Grand Pour ☕︎
 
 ![Gameplay Preview](./assets/gameplay.gif)
 
